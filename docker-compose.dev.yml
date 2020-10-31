@@ -21,3 +21,17 @@ services:
       - FLASK_ENV=development
       - FLASK_APP=app.py
       - FLASK_DEBUG=1
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    network_mode: host
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=personalguide2020
+    volumes:
+      - ./mongodb/:/docker-entrypoint-initdb.d/
+      - ./mongo-volume:/data/db
+    ports:
+      - 27017:27017
+    command: mongod

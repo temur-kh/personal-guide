@@ -6,7 +6,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     ports:
-      - 9090:80
+      - 80:80
 
   backend:
     container_name: backend
@@ -21,6 +21,20 @@ services:
       - FLASK_ENV=development
       - FLASK_APP=app.py
       - FLASK_DEBUG=1
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    network_mode: host
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=personalguide2020
+    volumes:
+      - ./mongodb/:/docker-entrypoint-initdb.d/
+      - ./mongo-volume:/data/db
+    ports:
+      - 27017:27017
+    command: mongod
 
 #version: "3"
 #services:
@@ -46,4 +60,4 @@ services:
 #    environment:
 #      - FLASK_ENV=development
 #      - FLASK_APP=app.py
-      - FLASK_DEBUG=1
+#      - FLASK_DEBUG=1
