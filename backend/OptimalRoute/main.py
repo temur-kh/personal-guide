@@ -8,6 +8,7 @@ from ortools.constraint_solver import routing_enums_pb2
 import data as dt
 import route_tools as rt
 import osmp_tools as ost
+import plot_tools as pt
 
 def test_ortools(data, DISTANCES=False, hard=False):
     """Entry point of the program."""
@@ -49,11 +50,16 @@ def test_ortools(data, DISTANCES=False, hard=False):
     routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
 
     # Setting first solution heuristic.
-    Strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
-    if hard:
-       Strategy = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-    search_parameters.first_solution_strategy = (Strategy)
+    if hard:
+        search_parameters.local_search_metaheuristic = (
+                routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH)
+        search_parameters.time_limit.seconds = 2
+        search_parameters.log_search = True
+    else:
+        search_parameters.first_solution_strategy = (
+                routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
+
 
     # Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
@@ -62,11 +68,12 @@ def test_ortools(data, DISTANCES=False, hard=False):
 # Display the routes.
     for i, route in enumerate(routes):
         print('Route', i, route)
-
+    return routes
 
 if __name__ == '__main__':
     cafes = ost.get_berlin_cafes()
     start = time.time()
-    test_ortools(cafes, )
+    routes = test_ortools(cafes,DISTANCES=False,hard=True )
     end = time.time()
     print('Time is {}'.format(end - start))
+    pt.plot_nodes(cafes, routes)
