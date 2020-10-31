@@ -1,5 +1,3 @@
-const db = connect("mongodb://root:personalguide2020@localhost:27017/database");
-
 db.createUser(
     {
         user: "user",
