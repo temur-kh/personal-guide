@@ -27,7 +27,6 @@ services:
     image: mongo:latest
     network_mode: host
     environment:
-      - AUTH=yes
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=personalguide2020
     volumes:
@@ -35,4 +34,4 @@ services:
       - ./mongo-volume:/data/db
     ports:
       - 27017:27017
-    command: mongod --auth
+    command: mongod

@@ -1,4 +1,4 @@
-var db = connect("mongodb://admin:personalguide2020@localhost:27017/admin");
+var db = connect("mongodb://localhost/admin");
 
 db = db.getSiblingDB('database'); // we can not use "use" statement here to switch db
 
@@ -13,6 +13,5 @@ db.createUser(
                 db: "database"
             }
         ],
-        passwordDigestor: "server",
     }
 )
