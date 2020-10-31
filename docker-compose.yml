@@ -24,6 +24,7 @@ services:
 
   mongodb:
     container_name: mongodb
+    image: mongo:latest
     network_mode: host
     environment:
       - AUTH=yes
