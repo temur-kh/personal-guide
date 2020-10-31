@@ -27,7 +27,8 @@ services:
     image: mongo:latest
     network_mode: host
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
+      - AUTH=yes
+      - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=personalguide2020
     volumes:
       - ./mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
