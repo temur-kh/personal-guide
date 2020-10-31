@@ -27,15 +27,14 @@ services:
     image: mongo:latest
     network_mode: host
     environment:
-      - AUTH: 'yes'
-      - MONGO_INITDB_ROOT_USENAME: 'root'
-      - MONGO_INITDB_ROOT_PASSWORD: 'personalguide2020'
-      - MONGO_INITDB_DATABASE: 'database'
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=personalguide2020
     volumes:
-      - ./mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+      - ./mongodb/:/docker-entrypoint-initdb.d/
       - ./mongo-volume:/data/db
     ports:
-      - '27017-27019:27017-27019'
+      - 27017:27017
+    command: mongod
 
 #version: "3"
 #services:
