@@ -27,9 +27,9 @@ services:
     image: mongo:latest
     network_mode: host
     environment:
-      - MONGO_INITDB_ROOT_USENAME: root
-      - MONGO_INITDB_ROOT_PASSWORD: personalguide2020
-      - MONGO_INITDB_DATABASE: database
+      - MONGO_INITDB_ROOT_USENAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=personalguide2020
+      - MONGO_INITDB_DATABASE=database
     volumes:
       - ./mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
       - ./mongo-volume:/data/db
