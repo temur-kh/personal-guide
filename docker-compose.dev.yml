@@ -27,7 +27,8 @@ services:
     image: mongo:latest
     network_mode: host
     environment:
-      - MONGO_INITDB_ROOT_USENAME=root
+      - AUTH=yes
+      - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=personalguide2020
       - MONGO_INITDB_DATABASE=database
     volumes:
