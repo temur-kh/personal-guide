@@ -1,5 +1,7 @@
 from flask import Flask, Blueprint, request, jsonify
 from flask_cors import CORS
+from general_service.serivce import get_optimal_route
+
 
 app = Flask(__name__)
 CORS(app)
@@ -12,7 +14,7 @@ def handle_submit():
         print(request.form, flush=True)
 
         # do your processing logic here.
-
+        # return jsonify(service.get_optimal_route(request.form))
         return jsonify(request.form)
 
 
