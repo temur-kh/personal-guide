@@ -8,7 +8,10 @@ def create_graph(lat, lon, dist=10000):
 
 
 def find_nodes_in_graph(og, data):
-    nv = len(data['lats'])
+    ids = data.get('ids')
+    if ids is not None:
+        return ids
+    nv = data['nv']
     ids = []
     for iv in range(nv):
         pid = og.find_node(data['lats'][iv], data['lons'][iv])

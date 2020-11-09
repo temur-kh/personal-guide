@@ -42,8 +42,7 @@ def plot_routing_path(data, og, routes, paths, back=False):
         lats = []
         points_lons = []
         points_lats = []
-        nv = data['nv'] #len(route) - 1
-        print(f'nv = {nv}')
+        nv = data['nv']
         route_nv = nv if back else nv - 1
         for iv in range(route_nv):
             jv = iv + 1

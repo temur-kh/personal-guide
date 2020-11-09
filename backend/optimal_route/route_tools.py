@@ -40,7 +40,7 @@ def compute_euclidean_distance_matrix(locations):
 
 def fill_distance_matrix(data, paths):
     nv = data['nv']
-    print(f'fill_distance_matrix = {nv}')
+    print(f'fill_distance_matrix')
     data['distance_matrix'] = np.zeros((nv, nv))
     distances = {}  # alternative place to store distances
     for iv in range(nv):

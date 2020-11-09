@@ -43,7 +43,7 @@ def fetch(city):
     num_cafe = overpass.query(query, timeout=60).countElements()
     print('city {} has {} cafe'.format(city, num_cafe))
     nodes = overpass.query(query, timeout=60).elements()
-    cafes = []
+    #cafes = []
     lons = []
     lats = []
     n_nodes = 0
@@ -53,14 +53,14 @@ def fetch(city):
             continue
         lons.append(n.lon())
         lats.append(n.lat())
-        x, y = coords_to_int(n.lat()), coords_to_int(n.lon())
-        cafes.append((x, y))
+        #x, y = coords_to_int(n.lat()), coords_to_int(n.lon())
+        #cafes.append((x, y))
         n_nodes += 1
         if n_nodes >= MAX_NODES:
             break
 
-    print('Consider only {} cafes'.format(len(cafes)))
-    data_nodes['locations'] = cafes  # unused ?
+    print('Consider only {} nodes'.format(n_nodes))
+    #data_nodes['locations'] = cafes  # unused ?
     data_nodes['num_vehicles'] = 1
     data_nodes['depot'] = 0
     data_nodes['lons'] = lons

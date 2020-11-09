@@ -3,8 +3,8 @@ import plot_tools as pt
 import osmp_tools as ost
 from optimizer import Optimizer
 
-# berlinCenter = (52.5198810, 13.4073380)
-berlinCenter = (52.512, 13.3912)
+berlinCenter = (52.5198810, 13.4073380)
+#berlinCenter = (52.512, 13.3912)
 
 
 def main():
