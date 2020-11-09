@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+
+# Examples from OR-tools API
 def create_data_model_distance():
     """Stores the data for the problem."""
     data = {}
@@ -79,3 +81,15 @@ def create_data_model_locations():
     data['num_vehicles'] = 1
     data['depot'] = 0
     return data
+
+
+def add_new_starting_point(data, point, pid):
+    data['lats'].append(point[0])
+    data['lons'].append(point[1])
+    data['ids'].append(pid)
+
+    nv = data['nv']
+    data['depot'] = nv
+    data['nv'] = nv + 1
+
+    print(f"nv = {data['nv']}")
