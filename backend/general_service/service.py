@@ -17,7 +17,7 @@ def get_optimal_route(params):
     """
 
     osm_data_processor = OSMDataProcessor('osm')
-    points_for_route = osm_data_processor.get_nearest_points()
+    points_for_route = osm_data_processor.query()
     graph = Graph(points_for_route)
     or_tools_optimizer = ORToolsOptimizer(graph)
     tmp_routes = or_tools_optimizer.solve()

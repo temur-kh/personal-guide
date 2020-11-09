@@ -11,8 +11,9 @@ class OSMDataProcessor(DataProcessor):
     def create_connection(self):
         pass
 
-    def query(self, params):
+    def query(self, params=None):
         pass
 
     def close_connection(self):
         pass
+

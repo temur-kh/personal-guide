@@ -1,6 +1,6 @@
 from flask import Flask, Blueprint, request, jsonify
 from flask_cors import CORS
-from general_service.serivce import get_optimal_route
+from general_service.service import get_optimal_route
 
 
 app = Flask(__name__)
