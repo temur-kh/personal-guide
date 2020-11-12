@@ -23,7 +23,13 @@ class Optimizer:
 
         return Optimizer.speed * t
 
-    def solve(self, starting_point, points_of_interest, time_for_route):
+    def solve(self, starting_point, points_of_interest, time_for_route, need_return=False):
+        """
+            starting_point - стартовая точка (координаты)
+            points_of_interest - словарь с интересующими точками
+            time_for_route - время на маршрут
+            need_return = bool, нужно ли возвращаться в стартовую точку
+        """
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
         graph_dist = self.estimate_graph_distance_from_walking_dist(walking_dist)
 
@@ -43,17 +49,18 @@ class Optimizer:
         end = time.time()
         print('Points of interest: dijkstra time {}'.format(end - start))
 
-        new_point = nxt.dijkstra_paths_for_point(self.og.graph, poi_paths, poi_ids, starting_point_id)
+        new_point = nxt.dijkstra_paths_for_point(self.og.graph, poi_paths, poi_ids, starting_point_id, need_return)
 
         if new_point:
             dt.add_new_starting_point(points_of_interest, starting_point, starting_point_id)
 
+        print(f'fill_distance_matrix')
         distances = rt.fill_distance_matrix(points_of_interest, poi_paths)
 
         start = time.time()
-        routes = rt.test_ortools(points_of_interest, distances=True, hard=True)
+        route = rt.test_ortools(points_of_interest, distances=True, hard=True)
         end = time.time()
         print('OR calculation time is {}'.format(end - start))
 
-        return routes, poi_paths
+        return route, poi_paths
 

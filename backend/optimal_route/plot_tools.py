@@ -34,32 +34,33 @@ def plot_path(data, og, path):
     # mplleaflet.display(fig=fig)
 
 
-def plot_routing_path(data, og, routes, paths, back=False):
+def plot_routing_path(data, og, route, paths):
     plt.figure(figsize=(8, 6))
     fig = plt.figure()
-    for i, route in enumerate(routes):
-        lons = []
-        lats = []
-        points_lons = []
-        points_lats = []
-        nv = data['nv']
-        route_nv = nv if back else nv - 1
-        for iv in range(route_nv):
-            jv = iv + 1
-            # get path between iv and jv
-            i_id_in_map = data['ids'][route[iv]]
-            j_id_in_map = data['ids'][route[jv]]
-            path = paths[i_id_in_map][j_id_in_map].get_path()
+    total_len = 0
+    lons = []
+    lats = []
+    points_lons = []
+    points_lats = []
+    nv = data['nv']
+    for iv in range(nv):
+        jv = iv + 1
+        # get path between iv and jv
+        i_id_in_map = data['ids'][route[iv]]
+        j_id_in_map = data['ids'][route[jv]]
+        path = paths[i_id_in_map][j_id_in_map].get_path()
+        len_path = paths[i_id_in_map][j_id_in_map].get_distance()
+        total_len += len_path
+        for p in path:
+            lons.append(og.pos[p][0])
+            lats.append(og.pos[p][1])
 
-            for p in path:
-                lons.append(og.pos[p][0])
-                lats.append(og.pos[p][1])
+    for iv in range(nv):
+        points_lons.append(data['lons'][iv])
+        points_lats.append(data['lats'][iv])
 
-        for iv in range(nv):
-            points_lons.append(data['lons'][iv])
-            points_lats.append(data['lats'][iv])
-
-        plt.plot(lons, lats, linewidth=4)
-        plt.plot(points_lons, points_lats, 'ro', markersize=10)
-        mplleaflet.show(fig=fig)
+    print(f'Total path length = {total_len}')
+    plt.plot(lons, lats, linewidth=4)
+    plt.plot(points_lons, points_lats, 'ro', markersize=10)
+    mplleaflet.show(fig=fig)
 

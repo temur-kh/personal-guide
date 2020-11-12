@@ -25,7 +25,7 @@ def find_node_in_graph(og, point):
     return pid
 
 
-def dijkstra_path(G, a, b):
+def nx_dijkstra_path(G, a, b):
     length, path = nx.single_source_dijkstra(G, a, b)
     return length, path
 
@@ -38,6 +38,7 @@ class RoutingPath:
     def __init__(self, a, b, graph=None):
         self.start = a
         self.end = b
+        self.use_nx = True
         if graph is None:
             self.path = []
             self.length = 0
@@ -45,7 +46,10 @@ class RoutingPath:
             self.calculate_path_on_graph(graph)
 
     def calculate_path_on_graph(self, graph):
-        self.length, self.path = dijkstra_path(graph, self.start, self.end)
+        if self.use_nx:
+            self.length, self.path = nx_dijkstra_path(graph, self.start, self.end)
+        else:
+            print('Not implemented yet')
 
     def get_distance(self):
         return self.length
@@ -70,7 +74,7 @@ def dijkstra_all_paths_for_list(graph, nodes):
     return paths
 
 
-def dijkstra_paths_for_point(graph, paths, nodes, pid):
+def dijkstra_paths_for_point(graph, paths, nodes, pid, need_return):
     # check if pid already in paths
     for a in nodes:
         if a == pid:
@@ -79,6 +83,9 @@ def dijkstra_paths_for_point(graph, paths, nodes, pid):
     paths[pid] = {}
     for a in nodes:
         paths[pid][a] = RoutingPath(pid, a, graph)
-        paths[a][pid] = RoutingPath(a, pid, graph)  # if routes are symmetrical --> can inv
+        if need_return:
+            paths[a][pid] = RoutingPath(a, pid, graph)  # if routes are symmetrical --> can inv?
+        else:
+            paths[a][pid] = RoutingPath(a, pid, None)
 
     return 1

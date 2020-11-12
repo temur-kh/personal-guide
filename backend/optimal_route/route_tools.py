@@ -40,7 +40,6 @@ def compute_euclidean_distance_matrix(locations):
 
 def fill_distance_matrix(data, paths):
     nv = data['nv']
-    print(f'fill_distance_matrix')
     data['distance_matrix'] = np.zeros((nv, nv))
     distances = {}  # alternative place to store distances
     for iv in range(nv):
@@ -113,7 +112,8 @@ def test_ortools(data, distances=False, hard=False):
     # Display the routes.
     for i, route in enumerate(routes):
         print('Route', i, route)
-    return routes
+
+    return routes[0]
 
 
 def print_solution(manager, routing, solution):

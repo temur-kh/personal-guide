@@ -10,10 +10,11 @@ berlinCenter = (52.5198810, 13.4073380)
 def main():
     time_for_route = 180
     points_of_interest = ost.get_berlin_cafes()
+    need_return = True
 
     opt = Optimizer()
-    routes, paths = opt.solve(berlinCenter, points_of_interest, time_for_route)
-    pt.plot_routing_path(points_of_interest, opt.og, routes, paths, back=True)
+    route, paths = opt.solve(berlinCenter, points_of_interest, time_for_route, need_return=need_return)
+    pt.plot_routing_path(points_of_interest, opt.og, route, paths)
 
 
 if __name__ == '__main__':
