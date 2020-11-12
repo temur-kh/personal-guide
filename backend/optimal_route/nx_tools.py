@@ -75,10 +75,6 @@ def dijkstra_all_paths_for_list(graph, nodes):
 
 
 def dijkstra_paths_for_point(graph, paths, nodes, pid, need_return):
-    # check if pid already in paths
-    for a in nodes:
-        if a == pid:
-            return 0
 
     paths[pid] = {}
     for a in nodes:
@@ -88,4 +84,3 @@ def dijkstra_paths_for_point(graph, paths, nodes, pid, need_return):
         else:
             paths[a][pid] = RoutingPath(a, pid, None)
 
-    return 1

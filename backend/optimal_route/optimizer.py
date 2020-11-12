@@ -7,6 +7,7 @@ import time
 
 MAX_DISTANCE_IN_MAP = 10000
 
+
 class Optimizer:
     def __init__(self, speed=100, graph=None):
         self.og = graph
@@ -32,7 +33,8 @@ class Optimizer:
 
         return self.speed * t
 
-    def solve(self, starting_point, points_of_interest, time_for_route, need_return=False):
+    def solve(self, starting_point, points_of_interest, time_for_route, need_return=False,
+              paths=None):
         """
             starting_point - стартовая точка (координаты)
             points_of_interest - словарь с интересующими точками
@@ -50,16 +52,19 @@ class Optimizer:
         poi_ids = nxt.find_nodes_in_graph(self.og, points_of_interest)
         starting_point_id = nxt.find_node_in_graph(self.og, starting_point)
 
-        start = time.time()
-        poi_paths = nxt.dijkstra_all_paths_for_list(self.og.graph, poi_ids)
-        end = time.time()
-        print('Points of interest: dijkstra time {}'.format(end - start))
-        start = time.time()
-        new_point = nxt.dijkstra_paths_for_point(self.og.graph, poi_paths, poi_ids, starting_point_id, need_return)
-        end = time.time()
-        print('Dijkstra time for Starting point: {}'.format(end - start))
+        if paths is None:
+            start = time.time()
+            poi_paths = nxt.dijkstra_all_paths_for_list(self.og.graph, poi_ids)
+            end = time.time()
+            print('Points of interest: dijkstra time {}'.format(end - start))
+        else:
+            poi_paths = paths
 
-        if new_point:
+        if starting_point_id not in poi_ids:
+            start = time.time()
+            nxt.dijkstra_paths_for_point(self.og.graph, poi_paths, poi_ids, starting_point_id, need_return)
+            end = time.time()
+            print('Dijkstra time for Starting point: {}'.format(end - start))
             dt.add_new_starting_point(points_of_interest, starting_point, starting_point_id)
 
         print('fill_distance_matrix')
@@ -71,4 +76,3 @@ class Optimizer:
         print('OR calculation time is {}'.format(end - start))
 
         return route, poi_paths
-
