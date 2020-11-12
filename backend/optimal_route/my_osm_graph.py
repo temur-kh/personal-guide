@@ -5,7 +5,7 @@ from functools import lru_cache
 
 class MyOsmGraph:
     earth_rad = 6371  # radius of earth(km)
-    len1deg = earth_rad / 180 * pi * 1000  # m/度
+    len1deg = earth_rad / 180 * pi * 1000  # m/deg
 
     def __init__(self, lat, lon, dist=100, cache=True,
                  blst=()):
