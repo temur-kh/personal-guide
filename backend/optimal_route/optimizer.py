@@ -68,10 +68,13 @@ class Optimizer:
             dt.add_new_starting_point(points_of_interest, starting_point, starting_point_id)
 
         print('fill_distance_matrix')
-        distances = rt.fill_distance_matrix(points_of_interest, poi_paths)
+        distance_matrix = rt.fill_distance_matrix(points_of_interest, poi_paths)
 
         start = time.time()
-        route = rt.test_ortools(points_of_interest, distances=True, hard=True)
+        #  route = rt.test_ortools(points_of_interest, distances=True, hard=True)
+        #  route = rt.find_ortools_route_with_distance_matrix(points_of_interest, distances, hard=True)
+        route = rt.find_route_with_distance_limit(points_of_interest, distance_matrix, walking_dist,
+                                                  poi_paths, need_return, hard=True)
         end = time.time()
         print('OR calculation time is {}'.format(end - start))
 

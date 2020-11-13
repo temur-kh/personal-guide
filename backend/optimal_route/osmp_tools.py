@@ -7,7 +7,7 @@ from OSMPythonTools.overpass import overpassQueryBuilder, Overpass
 import math
 from numba import njit
 
-MAX_NODES = 10
+MAX_NODES = 25
 earth_rad = 6371  # radius of earth(km)
 
 start_coords = [52.5198810, 13.4073380]

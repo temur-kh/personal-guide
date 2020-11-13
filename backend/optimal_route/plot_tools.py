@@ -42,7 +42,7 @@ def plot_routing_path(data, og, route, paths):
     lats = []
     points_lons = []
     points_lats = []
-    nv = data['nv']
+    nv = len(route) - 1
     for iv in range(nv):
         jv = iv + 1
         # get path between iv and jv
@@ -51,16 +51,29 @@ def plot_routing_path(data, og, route, paths):
         path = paths[i_id_in_map][j_id_in_map].get_path()
         len_path = paths[i_id_in_map][j_id_in_map].get_distance()
         total_len += len_path
+
         for p in path:
             lons.append(og.pos[p][0])
             lats.append(og.pos[p][1])
 
-    for iv in range(nv):
-        points_lons.append(data['lons'][iv])
-        points_lats.append(data['lats'][iv])
+    for iv in range(nv + 1):
+        i_id_in_map = data['ids'][route[iv]]
+        points_lons.append(og.pos[i_id_in_map][0])
+        points_lats.append(og.pos[i_id_in_map][1])
+
+    other_points_lons = []
+    other_points_lats = []
+    for iv in range(data['nv']):
+        if iv in route:
+            continue
+        i_id_in_map = data['ids'][iv]
+        other_points_lons.append(og.pos[i_id_in_map][0])
+        other_points_lats.append(og.pos[i_id_in_map][1])
 
     print(f'Total path length = {total_len}')
+    print(f'Number of visited nodes = {nv}')
     plt.plot(lons, lats, linewidth=4)
     plt.plot(points_lons, points_lats, 'ro', markersize=10)
+    plt.plot(other_points_lons, other_points_lats, 'go', markersize=10)
     mplleaflet.show(fig=fig)
 
