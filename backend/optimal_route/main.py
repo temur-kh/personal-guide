@@ -20,5 +20,6 @@ def main():
     pt.plot_routing_path(points_of_interest, opt.og, route, paths)
 
 
+
 if __name__ == '__main__':
     main()

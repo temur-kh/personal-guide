@@ -45,10 +45,11 @@ def fill_distance_matrix(data, paths):
         distances[iv] = {}
         i_id_in_map = data['ids'][iv]
         for jv in range(nv):
-            if iv == jv:
+            j_id_in_map = data['ids'][jv]
+            if iv == jv or j_id_in_map == i_id_in_map:
                 distances[iv][jv] = 0
                 continue
-            j_id_in_map = data['ids'][jv]
+
             path = paths[i_id_in_map][j_id_in_map]
             data['distance_matrix'][iv][jv] = path.get_distance()
             distances[iv][jv] = path.get_distance()
@@ -190,6 +191,8 @@ def calc_route_distance(data, route, paths):
         # get path between iv and jv
         i_id_in_map = data['ids'][route[iv]]
         j_id_in_map = data['ids'][route[jv]]
+        if j_id_in_map == i_id_in_map:
+            continue
         len_path = paths[i_id_in_map][j_id_in_map].get_distance()
         total_len += len_path
     return total_len
@@ -206,6 +209,8 @@ def limit_route(data, route, max_distance, need_return, paths):
         jv = iv + 1
         i_id_in_map = data['ids'][route[iv]]
         j_id_in_map = data['ids'][route[jv]]
+        if j_id_in_map == i_id_in_map:
+            continue
         len_path = paths[i_id_in_map][j_id_in_map].get_distance()
         cur_len += len_path
         limited_route.append(route[jv])
