@@ -163,7 +163,7 @@ def find_ortools_route_with_distance_matrix(data, distance_matrix, hard=False, s
             search_parameters.local_search_metaheuristic = (strategy)
 
         search_parameters.time_limit.seconds = 1
-        #search_parameters.log_search = True
+        # search_parameters.log_search = True
     else:
         if strategy is None:
             search_parameters.first_solution_strategy = (
@@ -195,10 +195,13 @@ def calc_route_distance(data, route, paths):
     return total_len
 
 
-def limit_route(data, route, max_distance, paths):
+def limit_route(data, route, max_distance, need_return, paths):
     nv = len(route) - 1
     cur_len = 0
     limited_route = [route[0]]
+    back_path = 0
+    starting_point = data['depot']
+    starting_point_in_map = data['ids'][starting_point]
     for iv in range(nv):
         jv = iv + 1
         i_id_in_map = data['ids'][route[iv]]
@@ -206,9 +209,12 @@ def limit_route(data, route, max_distance, paths):
         len_path = paths[i_id_in_map][j_id_in_map].get_distance()
         cur_len += len_path
         limited_route.append(route[jv])
-        if cur_len >= max_distance:
+        if need_return:
+            back_path = paths[j_id_in_map][starting_point_in_map].get_distance()
+        if cur_len + back_path >= max_distance:
+            limited_route.append(starting_point)
             break
-    return limited_route, cur_len
+    return limited_route, cur_len + back_path
 
 
 def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, need_return, hard=False):
@@ -216,17 +222,17 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, n
     total_distance = calc_route_distance(data, route, paths)
     if total_distance < max_distance * 1.1:
         return route
-    #if not need_return:
+    # if not need_return:
     #    return limit_route(data, route, max_distance, paths)
 
     firstSearchStrategies = [
         routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC,
         ##routing_enums_pb2.FirstSolutionStrategy.PATH_MOST_CONSTRAINED_ARC,
         ##routing_enums_pb2.FirstSolutionStrategy.EVALUATOR_STRATEGY,
-        #routing_enums_pb2.FirstSolutionStrategy.SAVINGS,
-        #routing_enums_pb2.FirstSolutionStrategy.SWEEP,
-        #routing_enums_pb2.FirstSolutionStrategy.CHRISTOFIDES,
-        #routing_enums_pb2.FirstSolutionStrategy.BEST_INSERTION,
+        # routing_enums_pb2.FirstSolutionStrategy.SAVINGS,
+        # routing_enums_pb2.FirstSolutionStrategy.SWEEP,
+        # routing_enums_pb2.FirstSolutionStrategy.CHRISTOFIDES,
+        # routing_enums_pb2.FirstSolutionStrategy.BEST_INSERTION,
         routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION,
         routing_enums_pb2.FirstSolutionStrategy.LOCAL_CHEAPEST_INSERTION,
         routing_enums_pb2.FirstSolutionStrategy.GLOBAL_CHEAPEST_ARC,
@@ -247,7 +253,7 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, n
     for strategy in firstSearchStrategies:
         route = find_ortools_route_with_distance_matrix(data, distance_matrix,
                                                         hard=False, strategy=strategy)
-        limited_route, route_distance = limit_route(data, route, max_distance, paths)
+        limited_route, route_distance = limit_route(data, route, max_distance, need_return, paths)
         routes.append(limited_route)
         distances.append(route_distance)
         num_nodes.append(len(limited_route) - 1)
