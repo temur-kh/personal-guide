@@ -3,17 +3,15 @@ from abc import ABC, abstractmethod
 
 class DataProcessor(ABC):
 
-    source_name = ""
-
-    def __init__(self, source_name):
-        self.source_name = source_name
-
-    @abstractmethod
-    def create_connection(self):
+    def __init__(self):
         pass
 
     @abstractmethod
-    def query(self, params):
+    def _create_connection(self):
+        pass
+
+    @abstractmethod
+    def select_query(self, params):
         pass
 
     @abstractmethod
