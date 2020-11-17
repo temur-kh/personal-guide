@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
-from backend.data_processing.data_processor import DataProcessor
-from backend.utils.configuration import *
+from data_processing.data_processor import DataProcessor
+from utils.configuration import *
 
 
 class OSMDataProcessor(DataProcessor):

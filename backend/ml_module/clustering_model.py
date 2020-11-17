@@ -1,6 +1,6 @@
 from sklearn.cluster import KMeans
 
-from backend.ml_module.base_ml_model import MLModel
+from ml_module.base_ml_model import MLModel
 
 
 class ClusteringModel(MLModel):
