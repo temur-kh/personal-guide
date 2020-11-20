@@ -7,7 +7,7 @@ from OSMPythonTools.overpass import overpassQueryBuilder, Overpass
 import math
 from numba import njit
 
-MAX_NODES = 25
+MAX_NODES = 30
 earth_rad = 6371  # radius of earth(km)
 
 start_coords = [52.5198810, 13.4073380]
@@ -54,7 +54,7 @@ def map_distance_to_meters(lat0, lon0, lat1, lon1):
 def fetch(city):
     nominatim = Nominatim()
     areaId = nominatim.query(city).areaId()
-    query = overpassQueryBuilder(area=areaId, elementType='node', selector='"amenity"="cafe"', out='body')
+    query = overpassQueryBuilder(area=areaId, elementType='node', selector='"tourism"="artwork"', out='body')
     num_cafe = overpass.query(query, timeout=60).countElements()
     print('city {} has {} cafe'.format(city, num_cafe))
     nodes = overpass.query(query, timeout=60).elements()

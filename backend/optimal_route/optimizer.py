@@ -44,6 +44,7 @@ class Optimizer:
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
         graph_dist = self.estimate_graph_distance_from_walking_dist(walking_dist)
         print(f'graph_dist = {graph_dist}')
+        print(f'walking_dist = {walking_dist}')
         if self.og is None:
             print('create_graph ...')
             self.og = nxt.create_graph(starting_point[0], starting_point[1], graph_dist)
@@ -69,13 +70,12 @@ class Optimizer:
 
         print('fill_distance_matrix')
         distance_matrix = rt.fill_distance_matrix(points_of_interest, poi_paths)
-
         start = time.time()
-        #  route = rt.test_ortools(points_of_interest, distances=True, hard=True)
-        #  route = rt.find_ortools_route_with_distance_matrix(points_of_interest, distances, hard=True)
-        route = rt.find_route_with_distance_limit(points_of_interest, distance_matrix, walking_dist,
-                                                  poi_paths, need_return, hard=True)
+        if False:
+            route = rt.find_route_with_distance_limit(points_of_interest, distance_matrix, walking_dist,
+                                                      poi_paths, need_return, hard=True)
+        else:
+            route = rt.reward_collecting_tsp(points_of_interest, distance_matrix, walking_dist, need_return)
         end = time.time()
         print('OR calculation time is {}'.format(end - start))
-
         return route, poi_paths

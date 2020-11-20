@@ -48,6 +48,7 @@ class RoutingPath:
     def calculate_path_on_graph(self, graph):
         if self.use_nx:
             self.length, self.path = nx_dijkstra_path(graph, self.start, self.end)
+            self.length = int(self.length)
         else:
             print('Not implemented yet')
 
