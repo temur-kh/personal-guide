@@ -6,9 +6,13 @@ class Graph(ABC):
         pass
 
     @abstractmethod
-    def get_distance(self):
+    def get_way(self, path):
         pass
 
     @abstractmethod
-    def get_way(self, path):
+    def save(self, file_name):
+        pass
+
+    @staticmethod
+    def load(file_name):
         pass

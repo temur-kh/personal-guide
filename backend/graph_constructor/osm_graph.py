@@ -1,22 +1,13 @@
 import pickle
-
-import networkx as nx
-
 from graph_constructor.graph import Graph
-import numpy as np
 
 
 class OsmGraph(Graph):
-    def __init__(self, graph, pos, way, points, data=None):
+    def __init__(self, graph, way, data):
         super().__init__()
         self.graph = graph
-        self.pos = pos
         self.way = way
-        self.points = points
         self.data = data
-
-    def get_distance(self):
-        return self.data
 
     def get_way(self, path):
         if len(self.data['ids']) > 0:
@@ -29,26 +20,12 @@ class OsmGraph(Graph):
             return line_string
         return []
 
-    def create_data(self):
-        nv = len(self.points)
-        self.data = {'ids': self.points, 'locations': [self.pos[i] for i in self.points], 'nv': nv, 'num_vehicles': 1,
-                     'depot': len(self.points) - 1, 'distance_matrix': np.zeros((nv, nv)), 'poi_path': {}}
-        for iv in range(nv):
-            i = self.points[iv]
-            self.data['poi_path'][iv] = {}
-            for jv in range(nv):
-                j = self.points[jv]
-                if iv != jv:
-                    if self.data['poi_path'].get(jv) is not None:
-                        self.data['distance_matrix'][iv][jv] = self.data['distance_matrix'][jv][iv]
-                        self.data['poi_path'][iv][jv] = list(reversed(self.data['poi_path'][jv][iv]))
-                    else:
-                        length, path = nx.single_source_dijkstra(self.graph, i, j)
-                        self.data['distance_matrix'][iv][jv] = length
-                        self.data['poi_path'][iv][jv] = path
-
     def save(self, file_name):
-        if self.data is None:
-            self.create_data()
-        with open(file_name, 'wb') as fp:
-            pickle.dump((self.graph, self.pos, self.way, {'points': self.points}, self.data), fp)
+        with open(file_name, 'wb') as f:
+            pickle.dump((self.graph, self.way, self.data), f)
+
+    @staticmethod
+    def load(file_name):
+        with open(file_name, 'rb') as f:
+            graph, way, data = pickle.load(f)
+            return OsmGraph(graph, way, data)
