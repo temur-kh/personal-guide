@@ -16,7 +16,7 @@ def euclidean_distance(p1, p2):
     return sum([(first - second) ** 2 for first, second in zip(p1, p2)])
 
 
-def haversine(p1, p2):
+def haversine_distance(p1, p2):
     """
     Haversine расстояние между двумя точками.
 

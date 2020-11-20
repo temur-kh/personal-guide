@@ -36,8 +36,6 @@ def get_optimal_route(params):
     matrix_distance = get_matrix_distance(nearest_points)
     graph = Graph(nearest_points)
     or_tools_optimizer = ORToolsOptimizer(graph)
-    tmp_routes = or_tools_optimizer.solve()
-    clustering_model = ClusteringModel()
-    best_routes = clustering_model.fit_predict(tmp_routes)
+    best_routes = or_tools_optimizer.solve()
     return best_routes
 
