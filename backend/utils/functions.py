@@ -1,3 +1,5 @@
+from math import radians, cos, sin, asin, sqrt
+
 
 def euclidean_distance(p1, p2):
     """
@@ -12,6 +14,33 @@ def euclidean_distance(p1, p2):
     """
 
     return sum([(first - second) ** 2 for first, second in zip(p1, p2)])
+
+
+def haversine(p1, p2):
+    """
+    Haversine расстояние между двумя точками.
+
+    Params:
+        p1([double, double]) - lat и lon первой точки.
+        p2([double, double]) - lat и lon второй точки.
+
+    Return:
+        double - Haversine расстояние между двумя точками.
+    """
+    
+    # конвертация градусов в радианы
+    lat1, lon1, lat2, lon2 = map(
+        radians,
+        [p1[0], p1[1], p2[0], p2[1]]
+    )
+
+    # формула Haversine
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    c = 2 * asin(sqrt(a))
+    r = 6371  # радиус земли в километрах
+    return c * r
 
 
 def get_matrix_distance(points, distance_function=euclidean_distance):

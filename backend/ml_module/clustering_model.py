@@ -9,25 +9,25 @@ class ClusteringModel(MLModel):
 
     Attributes:
         model(sklearn.cluster) - модель для кластеризации.
-        n_clusters(int) - число кластеров, если в модели есть такой параметр, иначе None.
+        params(dict) - параметря для модели.
         x_train(2-d array-like) - таблица с признаками объектов.
     """
     model = None
-    n_clusters = None
+    params = None
 
-    def __init__(self, model=KMeans, n_clusters=None):
+    def __init__(self, model=KMeans, params=None):
         """
         Создание модели для кластеризации
 
         Params:
             model(sklearn.cluster) - модель для кластеризации.
-            n_clusters(int) - число кластеров, если в модели есть такой параметр, иначе None.
+            params(dict) - параметря для модели.
         """
 
         super().__init__()
-        self.n_clusters = n_clusters
-        if n_clusters is not None:
-            self.model = model(n_clusters)
+        self.params = params
+        if params is not None:
+            self.model = model(**params)
         else:
             self.model = model()
 
