@@ -1,5 +1,7 @@
 import React from "react";
+import {BrowserRouter as Router, Route, Switch} from "react-router-dom";
 import BasicForm from "./components/BasicForm.js";
+import ResultForm from "./components/ResultForm.js";
 import {Container} from "@material-ui/core";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -24,7 +26,12 @@ function App() {
                 </Toolbar>
             </AppBar>
             <br/>
-            <BasicForm/>
+            <Router>
+                <Switch>
+                    <Route exact path="/" component={BasicForm}/>
+                    <Route path="/result" component={ResultForm}/>
+                </Switch>
+            </Router>
         </Container>
     );
 }
