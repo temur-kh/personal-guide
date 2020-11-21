@@ -161,7 +161,7 @@ export default function BasicForm() {
                             className={classes.selectEmpty}
                             inputProps={{'aria-label': 'Without label'}}
                         >
-                            <MenuItem value={"history"}>Исторический</MenuItem>
+                            <MenuItem value={"historic"}>Исторический</MenuItem>
                             <MenuItem value={"architecture"}>Архитектурный</MenuItem>
                             <MenuItem value={"entertainment"}>Развлекательный</MenuItem>
                             <MenuItem value={"custom"}>Кастомный</MenuItem>

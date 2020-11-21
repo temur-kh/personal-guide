@@ -18,10 +18,13 @@ def get_optimal_route(params):
     """
 
     # Эти параметря добавлены в качестве примера. По умолчанию они должны быть доступны в params.
-    lat = 54.7170465
-    lon = 20.5022674
-    max_distance = 2000
-    tags = ['entertainment', 'religion', 'tourism', 'architecture', 'historic']
+    if params['is_coords']:
+        lat, lon = map(float, params['start_loc'].split())
+    else:
+        lat, lon = 54.7170465, 20.5022674  # TODO: add Nominatim geodecoding
+    max_distance = 2000  # TODO convert (start_time, end_time) to distance
+    # tags = ['entertainment', 'religion', 'tourism', 'architecture', 'historic']
+    tags = [params['trip_type'], 'tourism']  # TODO change tags creation mechanism
 
     osm_data_processor = OSMDataProcessor()
     query_result = osm_data_processor.get_nearest_points(
