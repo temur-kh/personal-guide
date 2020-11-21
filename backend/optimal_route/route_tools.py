@@ -183,22 +183,22 @@ def find_ortools_route_with_distance_matrix(data, distance_matrix, hard=False, s
     return routes[0]
 
 
-def calc_route_distance(data, route, paths):
+def calc_route_distance(route, distance_matrix):
     nv = len(route) - 1
     total_len = 0
     for iv in range(nv):
         jv = iv + 1
         # get path between iv and jv
-        i_id_in_map = data['ids'][route[iv]]
-        j_id_in_map = data['ids'][route[jv]]
+        i_id_in_map = route[iv]
+        j_id_in_map = route[jv]
         if j_id_in_map == i_id_in_map:
             continue
-        len_path = paths[i_id_in_map][j_id_in_map].get_distance()
+        len_path = distance_matrix[i_id_in_map][j_id_in_map]
         total_len += len_path
     return total_len
 
 
-def limit_route(data, route, max_distance, need_return, paths):
+def limit_route(data, route, max_distance, need_return, distance_matrix):
     nv = len(route) - 1
     cur_len = 0
     limited_route = [route[0]]
@@ -207,15 +207,15 @@ def limit_route(data, route, max_distance, need_return, paths):
     starting_point_in_map = data['ids'][starting_point]
     for iv in range(nv):
         jv = iv + 1
-        i_id_in_map = data['ids'][route[iv]]
-        j_id_in_map = data['ids'][route[jv]]
+        i_id_in_map = route[iv]
+        j_id_in_map = route[jv]
         if j_id_in_map == i_id_in_map:
             continue
-        len_path = paths[i_id_in_map][j_id_in_map].get_distance()
+        len_path = distance_matrix[i_id_in_map][j_id_in_map]
         cur_len += len_path
         limited_route.append(route[jv])
         if need_return:
-            back_path = paths[j_id_in_map][starting_point_in_map].get_distance()
+            back_path = distance_matrix[j_id_in_map][starting_point_in_map]
         if cur_len + back_path >= max_distance:
             limited_route.append(starting_point)
             break
@@ -224,7 +224,7 @@ def limit_route(data, route, max_distance, need_return, paths):
 
 def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, need_return, hard=False):
     route = find_ortools_route_with_distance_matrix(data, distance_matrix, hard=hard)
-    total_distance = calc_route_distance(data, route, paths)
+    total_distance = calc_route_distance(route, distance_matrix)
     if total_distance < max_distance * 1.1:
         return route
     # if not need_return:
@@ -258,7 +258,7 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, n
     for strategy in firstSearchStrategies:
         route = find_ortools_route_with_distance_matrix(data, distance_matrix,
                                                         hard=False, strategy=strategy)
-        limited_route, route_distance = limit_route(data, route, max_distance, need_return, paths)
+        limited_route, route_distance = limit_route(data, route, max_distance, need_return, distance_matrix)
         routes.append(limited_route)
         distances.append(route_distance)
         num_nodes.append(len(limited_route) - 1)
