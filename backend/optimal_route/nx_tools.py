@@ -1,6 +1,5 @@
 import networkx as nx
-import numpy as np
-from my_osm_graph import MyOsmGraph
+from .my_osm_graph import MyOsmGraph
 
 
 def create_graph(lat, lon, dist=10000):

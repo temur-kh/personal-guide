@@ -1,8 +1,6 @@
-import route_tools as rt
-
-import nx_tools as nxt
-import data as dt
-import osmp_tools as ost
+from . import route_tools as rt
+from . import nx_tools as nxt
+from . import data as dt
 import time
 
 MAX_DISTANCE_IN_MAP = 10000
@@ -43,12 +41,12 @@ class Optimizer:
         """
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
         graph_dist = self.estimate_graph_distance_from_walking_dist(walking_dist)
-        print(f'graph_dist = {graph_dist}')
+        print(f'graph_dist = {graph_dist}', flush=True)
         if self.og is None:
-            print('create_graph ...')
+            print('create_graph ...', flush=True)
             self.og = nxt.create_graph(starting_point[0], starting_point[1], graph_dist)
 
-        print('find_nodes_in_graph')
+        print('find_nodes_in_graph', flush=True)
         poi_ids = nxt.find_nodes_in_graph(self.og, points_of_interest)
         starting_point_id = nxt.find_node_in_graph(self.og, starting_point)
 
@@ -56,7 +54,7 @@ class Optimizer:
             start = time.time()
             poi_paths = nxt.dijkstra_all_paths_for_list(self.og.graph, poi_ids)
             end = time.time()
-            print('Points of interest: dijkstra time {}'.format(end - start))
+            print('Points of interest: dijkstra time {}'.format(end - start), flush=True)
         else:
             poi_paths = paths
 
@@ -64,10 +62,10 @@ class Optimizer:
             start = time.time()
             nxt.dijkstra_paths_for_point(self.og.graph, poi_paths, poi_ids, starting_point_id, need_return)
             end = time.time()
-            print('Dijkstra time for Starting point: {}'.format(end - start))
+            print('Dijkstra time for Starting point: {}'.format(end - start), flush=True)
             dt.add_new_starting_point(points_of_interest, starting_point, starting_point_id)
 
-        print('fill_distance_matrix')
+        print('fill_distance_matrix', flush=True)
         distance_matrix = rt.fill_distance_matrix(points_of_interest, poi_paths)
 
         start = time.time()
@@ -76,6 +74,6 @@ class Optimizer:
         route = rt.find_route_with_distance_limit(points_of_interest, distance_matrix, walking_dist,
                                                   poi_paths, need_return, hard=True)
         end = time.time()
-        print('OR calculation time is {}'.format(end - start))
+        print('OR calculation time is {}'.format(end - start), flush=True)
 
         return route, poi_paths

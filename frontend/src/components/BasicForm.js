@@ -1,4 +1,4 @@
-import React, {useState, createRef} from "react";
+import React, {useState} from "react";
 import {makeStyles} from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
@@ -10,6 +10,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import MapComponent from './MapComponent'
+import {useHistory} from "react-router-dom";
 
 import axios from "axios";
 
@@ -32,18 +33,25 @@ function getDTString(datetime) {
 }
 
 export default function BasicForm() {
+    let history = useHistory();
     const url = "api/submit"
     const classes = useStyles()
     const [startLoc, setStartLoc] = useState("")
+    const [startLatLng, setStartLatLng] = useState("")
+    const [duration, setDuration] = useState(60)
     const [coords, setCoords] = useState(false)
     const [startDT, setStartDT] = useState(getDTString(getStartDT()))
     const [endDT, setEndDT] = useState(getDTString(getEndDT(getStartDT())))
     const [tripType, setTripType] = useState("history")
-    const [success, setSuccess] = useState(undefined)
+    const [loadingStatus, setLoadingStatus] = useState(undefined)
 
     function handleInputStartLoc(e) {
         setStartLoc(e.target.value);
         setCoords(false);
+    }
+
+    function handleDuration(e) {
+        setDuration(e.target.value);
     }
 
     function handleInputStartDT(e) {
@@ -62,17 +70,17 @@ export default function BasicForm() {
         let coords = e.latlng.lat + " " + e.latlng.lng
         setStartLoc(coords);
         setCoords(true);
+        setStartLatLng(e.latlng)
     }
 
     function handleSubmit(e) {
         e.preventDefault();
         const data = new FormData();
-        data.set("start_loc", startLoc);
-        data.set("is_coords", coords);
-        data.set("start_datetime", startDT);
-        data.set("end_datetime", endDT);
-        data.set("trip_type", tripType)
+        data.set("start_lat", startLatLng.lat);
+        data.set("start_lng", startLatLng.lng);
+        data.set("duration", duration);
 
+        setLoadingStatus("loading");
         axios({
             method: "post",
             url: url,
@@ -80,19 +88,25 @@ export default function BasicForm() {
         })
             .then(function (response) {
                 console.log(response);
-                setSuccess(true);
+                setLoadingStatus("success");
+                history.push({
+                    pathname: "/result",
+                    response: response.data
+                });
             })
             .catch(function (response) {
-                setSuccess(false);
+                setLoadingStatus("error");
                 console.log(response);
-            });
+            })
     }
 
     function Alerting() {
-        if (success === true) {
-            return <Alert severity="success">Data successfully sent !</Alert>;
-        } else if (success === false) {
+        if (loadingStatus === "success") {
+            return <Alert severity="success">Data successfully sent!</Alert>;
+        } else if (loadingStatus === "error") {
             return <Alert severity="error">Oops. An error just occurred!</Alert>;
+        } else if (loadingStatus === "loading") {
+            return <Alert severity="info">Calculating best route...</Alert>;
         } else {
             return null;
         }
@@ -113,6 +127,20 @@ export default function BasicForm() {
                             fullWidth={true}
                             value={startLoc}
                             onChange={handleInputStartLoc}
+                        />
+                    </Grid>
+
+                    <Grid item xs={12} sm={12} md={6} lg={6} className={classes.input}>
+                        <TextField
+                            required
+                            type="number"
+                            inputProps={{inputMode: 'numeric', pattern: '[0-9]*'}}
+                            name="duration"
+                            id="duration"
+                            label="Duration of trip in minutes"
+                            fullWidth={true}
+                            value={duration}
+                            onChange={handleDuration}
                         />
                     </Grid>
 

@@ -2,6 +2,7 @@
 
 import React, {createRef, Component} from 'react'
 import {Map, Marker, Popup, TileLayer} from 'react-leaflet'
+import "../css/MapComponent.css"
 
 type State = {
     hasLocation: boolean,
@@ -15,8 +16,8 @@ export default class MapComponent extends Component<{}, State> {
     state = {
         hasLocation: false,
         latlng: {
-            lat: 51.505,
-            lng: -0.09,
+            lat: 52.5198810,
+            lng: 13.4073380
         },
     }
 
@@ -32,13 +33,6 @@ export default class MapComponent extends Component<{}, State> {
         }
     }
 
-    // handleLocationFound = (e: Object) => {
-    //     this.setState({
-    //         hasLocation: true,
-    //         latlng: e.latlng,
-    //     })
-    // }
-
     render() {
         const marker = this.state.hasLocation ? (
             <Marker position={this.state.latlng}>
@@ -51,9 +45,8 @@ export default class MapComponent extends Component<{}, State> {
                 center={this.state.latlng}
                 length={4}
                 onClick={this.handleClick}
-                // onLocationfound={this.handleLocationFound}
                 ref={this.mapRef}
-                zoom={13}>
+                zoom={14}>
                 <TileLayer
                     attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

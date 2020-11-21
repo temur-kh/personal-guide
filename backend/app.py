@@ -14,8 +14,8 @@ def handle_submit():
         print(request.form, flush=True)
 
         # do your processing logic here.
-        # return jsonify(get_optimal_route(request.form))
-        return jsonify(request.form)
+        points, paths = get_optimal_route(request.form)
+        return jsonify(points=points, paths=paths)
 
 
 app.register_blueprint(api, url_prefix='/api')
