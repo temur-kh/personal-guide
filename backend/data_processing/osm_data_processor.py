@@ -26,9 +26,6 @@ class OSMDataProcessor(DataProcessor):
         """
         Подключение к базе данных.
         """
-        username = 'user'
-        password = 'personalguide2020'
-
         self.client = MongoClient(
             osm_data_processor[SITE_NAME],
             username=osm_data_processor[USERNAME],
