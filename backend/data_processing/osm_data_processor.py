@@ -26,8 +26,13 @@ class OSMDataProcessor(DataProcessor):
         """
         Подключение к базе данных.
         """
-
-        self.client = MongoClient(osm_data_processor[SITE_NAME])
+        self.client = MongoClient(
+            osm_data_processor[SITE_NAME],
+            username=osm_data_processor[USERNAME],
+            password=osm_data_processor[PASSWORD],
+            authSource=osm_data_processor[DATABASE_NAME],
+            authMechanism='SCRAM-SHA-1'
+        )
         self.db = self.client.get_database(osm_data_processor[DATABASE_NAME])
         # Пока непонятно, нужно ли это делать каждый раз при подключении к базе
         self.db.nodes.create_index([('location', "2dsphere")])

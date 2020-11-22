@@ -1,4 +1,5 @@
-from optimal_route import osmp_tools as ost
+from data_processing.osm_data_processor import OSMDataProcessor
+from graph_constructor.osm_graph_constructor import OsmGraphConstructor
 from optimal_route.optimizer import Optimizer
 
 
@@ -17,31 +18,33 @@ def get_optimal_route(params):
     lat = params.get('start_lat', type=float)
     lng = params.get('start_lng', type=float)
     speed = 100  # meters in minute
-    ost.set_start_coords(lat, lng)
-    ost.set_map_distance(time_for_route * speed)
-    points_of_interest = ost.get_berlin_cafes()
+    distance = time_for_route * speed
+
+    osm_data_processor = OSMDataProcessor()
+    # query_result = osm_data_processor.get_nearest_points(
+    #     lat=lat,
+    #     lon=lng,
+    #     max_distance=distance,
+    #     tags=['historic', 'tourism']
+    # )
+    # nearest_points = get_points_coordinates_from_query_result(query_result)
+    # clustering_model = ClusteringModel()
+    # labels = clustering_model.fit_predict(nearest_points)
+    constructor = OsmGraphConstructor(osm_data_processor, "./")
+    graph = constructor.create_graph(lat, lng, distance, tags=['historic', 'tourism'])
     need_return = False
 
     opt = Optimizer(speed=speed)
-    route, paths = opt.solve((lat, lng), points_of_interest, time_for_route, need_return=need_return)
+    route, _ = opt.solve(graph.data, time_for_route, need_return=need_return)
 
-    return get_path(points_of_interest, opt.og, route, paths)
+    return get_path(graph, route)
 
 
-def get_path(data, og, route, paths):
+def get_path(og, route):
     result_paths = []
     points = []
-    total_points = len(route) - 1
-    for index in range(total_points):
-        next_index = index + 1
-        index_in_map = data['ids'][route[index]]
-        next_index_in_map = data['ids'][route[next_index]]
-        points.append({"lng": og.pos[index_in_map][0], "lat": og.pos[index_in_map][1]})
-
-        path = paths[index_in_map][next_index_in_map].get_path()
-        for point in path:
-            result_paths.append({"lng": og.pos[point][0], "lat": og.pos[point][1]})
-
-    index_in_map = data['ids'][route[total_points]]
-    points.append({"lng": og.pos[index_in_map][0], "lat": og.pos[index_in_map][1]})
+    for index in route:
+        points.append({"lng": og.data['locations'][index][1], "lat": og.data['locations'][index][0]})
+    for line in og.get_way(route):
+        result_paths.append({"lng": line[1], "lat": line[0]})
     return points, result_paths
