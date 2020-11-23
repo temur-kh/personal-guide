@@ -204,7 +204,6 @@ def limit_route(data, route, max_distance, need_return, distance_matrix):
     limited_route = [route[0]]
     back_path = 0
     starting_point = data['depot']
-    starting_point_in_map = data['ids'][starting_point]
     for iv in range(nv):
         jv = iv + 1
         i_id_in_map = route[iv]
@@ -215,7 +214,7 @@ def limit_route(data, route, max_distance, need_return, distance_matrix):
         cur_len += len_path
         limited_route.append(route[jv])
         if need_return:
-            back_path = distance_matrix[j_id_in_map][starting_point_in_map]
+            back_path = distance_matrix[j_id_in_map][starting_point]
         if cur_len + back_path >= max_distance:
             limited_route.append(starting_point)
             break

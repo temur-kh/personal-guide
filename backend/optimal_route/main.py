@@ -9,7 +9,7 @@ berlinCenter = (52.5198810, 13.4073380)
 
 
 def main():
-    time_for_route = 60  # minutes
+    time_for_route = 40  # minutes
     speed = 100  # meters in minute
     need_return = False
 
