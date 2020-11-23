@@ -17,6 +17,7 @@ def main():
 
     opt = Optimizer(speed=speed)
     route = opt.solve(data, time_for_route, need_return=need_return)
+    print(route)
 
 
 if __name__ == '__main__':

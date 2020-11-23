@@ -270,7 +270,7 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, need_ret
     return routes[max_route_ids[min_dist_id]]
 
 
-def reward_collecting_tsp(data, distance_matrix, max_distance, need_return):
+def reward_collecting_tsp(data, distance_matrix, max_distance):
     num_nodes = data['nv']
     print(f'num_nodes = {num_nodes}')
     all_nodes = range(num_nodes)
