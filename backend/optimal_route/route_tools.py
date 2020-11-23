@@ -305,7 +305,7 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
             arc_literals[i, j] = lit
 
             lits.append(lit)
-            dists.append(distance_matrix[i][j])
+            dists.append(int(distance_matrix[i][j]))
 
     model.AddCircuit(arcs)
 
