@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import math
 import numpy as np
-# from ortools.graph import pywrapgraph
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
+from ortools.sat.python import cp_model
 
 
 def get_routes(solution, routing, manager):
@@ -204,7 +204,6 @@ def limit_route(data, route, max_distance, need_return, distance_matrix):
     limited_route = [route[0]]
     back_path = 0
     starting_point = data['depot']
-    starting_point_in_map = data['ids'][starting_point]
     for iv in range(nv):
         jv = iv + 1
         i_id_in_map = route[iv]
@@ -215,20 +214,18 @@ def limit_route(data, route, max_distance, need_return, distance_matrix):
         cur_len += len_path
         limited_route.append(route[jv])
         if need_return:
-            back_path = distance_matrix[j_id_in_map][starting_point_in_map]
+            back_path = distance_matrix[j_id_in_map][starting_point]
         if cur_len + back_path >= max_distance:
             limited_route.append(starting_point)
             break
     return limited_route, cur_len + back_path
 
 
-def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, need_return, hard=False):
+def find_route_with_distance_limit(data, distance_matrix, max_distance, need_return, hard=False):
     route = find_ortools_route_with_distance_matrix(data, distance_matrix, hard=hard)
     total_distance = calc_route_distance(route, distance_matrix)
     if total_distance < max_distance * 1.1:
         return route
-    # if not need_return:
-    #    return limit_route(data, route, max_distance, paths)
 
     firstSearchStrategies = [
         routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC,
@@ -258,7 +255,9 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, n
     for strategy in firstSearchStrategies:
         route = find_ortools_route_with_distance_matrix(data, distance_matrix,
                                                         hard=False, strategy=strategy)
+
         limited_route, route_distance = limit_route(data, route, max_distance, need_return, distance_matrix)
+
         routes.append(limited_route)
         distances.append(route_distance)
         num_nodes.append(len(limited_route) - 1)
@@ -268,3 +267,93 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, n
     distances = np.array(distances)[max_route_ids]
     min_dist_id = np.argmin(distances)
     return routes[max_route_ids[min_dist_id]]
+
+
+def reward_collecting_tsp(data, distance_matrix, max_distance):
+    num_nodes = data['nv']
+    print(f'num_nodes = {num_nodes}')
+    all_nodes = range(num_nodes)
+    model = cp_model.CpModel()
+    obj_vars = []
+    obj_coeffs = []
+    lits = []
+    dists = []
+
+    route = []
+
+    visited_nodes = []
+    arc_literals = {}
+    VISIT_VALUES = [1] * num_nodes
+
+    # Create the circuit constraint.
+    arcs = []
+    for i in all_nodes:
+        is_visited = model.NewBoolVar('%i is visited' % i)
+        arcs.append([i, i, is_visited.Not()])
+
+        obj_vars.append(is_visited)
+        obj_coeffs.append(VISIT_VALUES[i])
+
+        visited_nodes.append(is_visited)
+
+        for j in all_nodes:
+            if i == j:
+                continue
+
+            lit = model.NewBoolVar('%i follows %i' % (j, i))
+            arcs.append([i, j, lit])
+            arc_literals[i, j] = lit
+
+            lits.append(lit)
+            dists.append(int(distance_matrix[i][j]))
+
+    model.AddCircuit(arcs)
+
+    starting_point = data['depot']
+    model.Add(visited_nodes[starting_point] == 1)
+
+    # The maximal distance of a route should not exceed max_distance
+
+    model.Add(sum(lits[i] * dists[i] for i in range(len(lits))) <= max_distance)
+
+    # Maximize reward from visited nodes.
+    model.Maximize(
+        sum(obj_vars[i] * obj_coeffs[i] for i in range(len(obj_vars))))
+
+    # Solve and print out the solution.
+    solver = cp_model.CpSolver()
+    solver.parameters.log_search_progress = True
+    # To benefit from the linearization of the circuit constraint.
+    solver.parameters.linearization_level = 2
+
+    solver.Solve(model)
+    print(solver.ResponseStats())
+
+    first_visited_node = starting_point
+
+    if first_visited_node != -1:
+        current_node = first_visited_node
+        str_route = '%i' % current_node
+        route.append(current_node)
+        route_is_finished = False
+        route_distance = 0
+        value_collected = 0
+        while not route_is_finished:
+            value_collected += VISIT_VALUES[current_node]
+            for i in all_nodes:
+                if i == current_node:
+                    continue
+                if solver.BooleanValue(arc_literals[current_node, i]):
+                    str_route += ' -> %i' % i
+                    route.append(i)
+                    route_distance += distance_matrix[current_node][i]
+                    current_node = i
+                    if current_node == first_visited_node:
+                        route_is_finished = True
+                    break
+
+        print('Route:', str_route)
+        print('Travelled distance:', route_distance)
+        print('Value collected: ', value_collected)
+
+    return route

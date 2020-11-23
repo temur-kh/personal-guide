@@ -35,7 +35,7 @@ def get_optimal_route(params):
     need_return = False
 
     opt = Optimizer(speed=speed)
-    route, _ = opt.solve(graph.data, time_for_route, need_return=need_return)
+    route = opt.solve(graph.data, time_for_route, need_return=need_return)
 
     return get_path(graph, route)
 

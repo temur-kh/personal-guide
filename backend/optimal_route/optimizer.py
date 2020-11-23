@@ -1,9 +1,15 @@
 from . import route_tools as rt
-from . import nx_tools as nxt
-from . import data as dt
 import time
 
 MAX_DISTANCE_IN_MAP = 10000
+
+
+def correct_distance_matrix_no_return(data):
+    depot = data['depot']
+    nv = data['nv']
+    distance_matrix = data['distance_matrix']
+    for i in range(nv):
+        distance_matrix[i][depot] = 0
 
 
 class Optimizer:
@@ -32,28 +38,33 @@ class Optimizer:
         return self.speed * t
 
     def solve(self, data, time_for_route, need_return=False):
+
         """
-            starting_point - стартовая точка (координаты)
-            points_of_interest - словарь с интересующими точками
+            data - словарь с ключами:
+                distance_matrix - матрица расстояний между всеми точками
+                depot - индекс стартовой вершины
+                nv - число вершин
             time_for_route - время на маршрут
             need_return = bool, нужно ли возвращаться в стартовую точку
         """
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
-        graph_dist = self.estimate_graph_distance_from_walking_dist(walking_dist)
-        print(f'graph_dist = {graph_dist}', flush=True)
 
-        print('find_nodes_in_graph', flush=True)
-        poi_paths = data['poi_path']
+        if not need_return:
+            correct_distance_matrix_no_return(data)
 
-        print('fill_distance_matrix', flush=True)
         distance_matrix = data['distance_matrix']
 
+        USE_OR_HEURISTIC = False
+
         start = time.time()
-        #  route = rt.test_ortools(points_of_interest, distances=True, hard=True)
-        #  route = rt.find_ortools_route_with_distance_matrix(points_of_interest, distances, hard=True)
-        route = rt.find_route_with_distance_limit(data, distance_matrix, walking_dist,
-                                                  poi_paths, need_return, hard=True)
+        if USE_OR_HEURISTIC:
+            route = rt.find_route_with_distance_limit(data, distance_matrix, walking_dist,
+                                                      need_return, hard=True)
+        else:
+            route = rt.reward_collecting_tsp(data, distance_matrix, walking_dist)
         end = time.time()
         print('OR calculation time is {}'.format(end - start), flush=True)
+        if not need_return:
+            route.pop()
 
-        return route, poi_paths
+        return route

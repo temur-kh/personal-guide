@@ -21,7 +21,8 @@ def create_data_model_distance():
         [1972, 579, 1260, 987, 371, 999, 701, 2099, 600, 1162, 1200, 504, 0],
     ]  # yapf: disable
     data['num_vehicles'] = 1
-    data['depot'] = 0
+    data['depot'] = 12
+    data['nv'] = 13
     return data
 
 
