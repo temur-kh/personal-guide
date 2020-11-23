@@ -50,7 +50,6 @@ def plot_routing_path(data, og, route, paths):
         j_id_in_map = data['ids'][route[jv]]
         if j_id_in_map == i_id_in_map:
             continue
-
         path = paths[i_id_in_map][j_id_in_map].get_path()
         len_path = paths[i_id_in_map][j_id_in_map].get_distance()
         total_len += len_path

@@ -1,8 +1,4 @@
-import route_tools as rt
-
-import nx_tools as nxt
-import data as dt
-import osmp_tools as ost
+from . import route_tools as rt
 import time
 
 MAX_DISTANCE_IN_MAP = 10000
@@ -33,49 +29,28 @@ class Optimizer:
 
         return self.speed * t
 
-    def solve(self, starting_point, points_of_interest, time_for_route, need_return=False,
-              paths=None):
+    def solve(self, data, time_for_route, need_return=False):
+
         """
-            starting_point - стартовая точка (координаты)
-            points_of_interest - словарь с интересующими точками
+            data - словарь с ключами:
+                distance_matrix - матрица расстояний между всеми точками
+                depot - индекс стартовой вершины
             time_for_route - время на маршрут
             need_return = bool, нужно ли возвращаться в стартовую точку
         """
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
-        graph_dist = self.estimate_graph_distance_from_walking_dist(walking_dist)
-        print(f'graph_dist = {graph_dist}')
-        print(f'walking_dist = {walking_dist}')
-        if self.og is None:
-            print('create_graph ...')
-            self.og = nxt.create_graph(starting_point[0], starting_point[1], graph_dist)
 
-        print('find_nodes_in_graph')
-        poi_ids = nxt.find_nodes_in_graph(self.og, points_of_interest)
-        starting_point_id = nxt.find_node_in_graph(self.og, starting_point)
+        distance_matrix = data['distance_matrix']
 
-        if paths is None:
-            start = time.time()
-            poi_paths = nxt.dijkstra_all_paths_for_list(self.og.graph, poi_ids)
-            end = time.time()
-            print('Points of interest: dijkstra time {}'.format(end - start))
-        else:
-            poi_paths = paths
+        USE_OR_HEURISTIC = False
 
-        if starting_point_id not in poi_ids:
-            start = time.time()
-            nxt.dijkstra_paths_for_point(self.og.graph, poi_paths, poi_ids, starting_point_id, need_return)
-            end = time.time()
-            print('Dijkstra time for Starting point: {}'.format(end - start))
-            dt.add_new_starting_point(points_of_interest, starting_point, starting_point_id)
-
-        print('fill_distance_matrix')
-        distance_matrix = rt.fill_distance_matrix(points_of_interest, poi_paths)
         start = time.time()
-        if False:
-            route = rt.find_route_with_distance_limit(points_of_interest, distance_matrix, walking_dist,
-                                                      poi_paths, need_return, hard=True)
+        if USE_OR_HEURISTIC:
+            route = rt.find_route_with_distance_limit(data, distance_matrix, walking_dist,
+                                                      need_return, hard=True)
         else:
-            route = rt.reward_collecting_tsp(points_of_interest, distance_matrix, walking_dist, need_return)
+            route = rt.reward_collecting_tsp(data, distance_matrix, walking_dist, need_return)
         end = time.time()
-        print('OR calculation time is {}'.format(end - start))
-        return route, poi_paths
+        print('OR calculation time is {}'.format(end - start), flush=True)
+
+        return route

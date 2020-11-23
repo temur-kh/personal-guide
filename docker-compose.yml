@@ -25,7 +25,6 @@ services:
   mongodb:
     container_name: mongodb
     image: mongo:latest
-    network_mode: host
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=personalguide2020

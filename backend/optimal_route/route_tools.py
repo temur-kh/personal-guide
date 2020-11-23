@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
 import numpy as np
-# from ortools.graph import pywrapgraph
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.sat.python import cp_model
@@ -184,21 +183,22 @@ def find_ortools_route_with_distance_matrix(data, distance_matrix, hard=False, s
     return routes[0]
 
 
-def calc_route_distance(data, route):
+def calc_route_distance(route, distance_matrix):
     nv = len(route) - 1
     total_len = 0
     for iv in range(nv):
         jv = iv + 1
-        i = route[iv]
-        j = route[jv]
-        if i == j:
+        # get path between iv and jv
+        i_id_in_map = route[iv]
+        j_id_in_map = route[jv]
+        if j_id_in_map == i_id_in_map:
             continue
-        len_path = data['distance_matrix'][i][j]
+        len_path = distance_matrix[i_id_in_map][j_id_in_map]
         total_len += len_path
     return total_len
 
 
-def limit_route(data, route, max_distance, need_return, paths):
+def limit_route(data, route, max_distance, need_return, distance_matrix):
     nv = len(route) - 1
     cur_len = 0
     limited_route = [route[0]]
@@ -207,28 +207,26 @@ def limit_route(data, route, max_distance, need_return, paths):
     starting_point_in_map = data['ids'][starting_point]
     for iv in range(nv):
         jv = iv + 1
-        i_id_in_map = data['ids'][route[iv]]
-        j_id_in_map = data['ids'][route[jv]]
+        i_id_in_map = route[iv]
+        j_id_in_map = route[jv]
         if j_id_in_map == i_id_in_map:
             continue
-        len_path = paths[i_id_in_map][j_id_in_map].get_distance()
+        len_path = distance_matrix[i_id_in_map][j_id_in_map]
         cur_len += len_path
         limited_route.append(route[jv])
         if need_return:
-            back_path = paths[j_id_in_map][starting_point_in_map].get_distance()
+            back_path = distance_matrix[j_id_in_map][starting_point_in_map]
         if cur_len + back_path >= max_distance:
             limited_route.append(starting_point)
             break
     return limited_route, cur_len + back_path
 
 
-def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, need_return, hard=False):
+def find_route_with_distance_limit(data, distance_matrix, max_distance, need_return, hard=False):
     route = find_ortools_route_with_distance_matrix(data, distance_matrix, hard=hard)
-    total_distance = calc_route_distance(data, route)
+    total_distance = calc_route_distance(route, distance_matrix)
     if total_distance < max_distance * 1.1:
         return route
-    # if not need_return:
-    #    return limit_route(data, route, max_distance, paths)
 
     firstSearchStrategies = [
         routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC,
@@ -258,7 +256,9 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, paths, n
     for strategy in firstSearchStrategies:
         route = find_ortools_route_with_distance_matrix(data, distance_matrix,
                                                         hard=False, strategy=strategy)
-        limited_route, route_distance = limit_route(data, route, max_distance, need_return, paths)
+
+        limited_route, route_distance = limit_route(data, route, max_distance, need_return, distance_matrix)
+
         routes.append(limited_route)
         distances.append(route_distance)
         num_nodes.append(len(limited_route) - 1)
