@@ -21,9 +21,30 @@ def create_data_model_distance():
         [1972, 579, 1260, 987, 371, 999, 701, 2099, 600, 1162, 1200, 504, 0],
     ]  # yapf: disable
     data['num_vehicles'] = 1
-    data['depot'] = 12
+    data['depot'] = 0
     data['nv'] = 13
     return data
+
+
+def create_clusters(nv, nc):
+    l = (nv + nc - 1) // nc
+    clusters = [[] for x in range(nc)]
+    for i in range(nv):
+        ic = i // l
+        clusters[ic].append(i)
+    return clusters
+
+
+def extract_data(data, cluster, starting_point):
+    sorted_cluster = cluster
+    if starting_point not in cluster:
+        sorted_cluster.append(starting_point)
+    sorted_cluster = sorted(sorted_cluster)
+    nvc = len(sorted_cluster)
+    cluster_data = {'num_vehicles': 1, 'nv': nvc, 'distance_matrix': [[]] * nvc, 'depot': cluster.index(starting_point)}
+    for i in range(nvc):
+        cluster_data['distance_matrix'][i] = [data['distance_matrix'][sorted_cluster[i]][j] for j in sorted_cluster]
+    return cluster_data
 
 
 def create_data_model_locations():
