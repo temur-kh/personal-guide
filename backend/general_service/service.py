@@ -30,7 +30,7 @@ def get_optimal_route(params):
     # nearest_points = get_points_coordinates_from_query_result(query_result)
     # clustering_model = ClusteringModel()
     # labels = clustering_model.fit_predict(nearest_points)
-    constructor = OsmGraphConstructor(osm_data_processor, "./")
+    constructor = OsmGraphConstructor(osm_data_processor, "./cache/", cache=False)
     graph = constructor.create_graph(lat, lng, distance, tags=['historic', 'tourism'])
     need_return = False
 
