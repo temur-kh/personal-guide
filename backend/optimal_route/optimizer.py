@@ -1,8 +1,7 @@
-import route_tools as rt
 import data as dt
+import route_tools as rt
 import time
 import multiprocessing as multi
-import numpy as np
 
 #multi.set_start_method('fork', force=True)
 
@@ -13,7 +12,6 @@ def correct_distance_matrix_no_return(data):
     depot = data['depot']
     nv = data['nv']
     distance_matrix = data['distance_matrix']
-    print(f'depot = {depot}, nv = {nv}')
     for i in range(nv):
         distance_matrix[i][depot] = 0
 
@@ -133,3 +131,4 @@ class Optimizer:
         pool.close()
 
         return routes
+

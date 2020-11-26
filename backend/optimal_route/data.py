@@ -23,6 +23,7 @@ def create_data_model_distance():
     data['num_vehicles'] = 1
     data['depot'] = 0
     data['nv'] = 13
+    data['rewards'] = [1 for i in range(data['nv'])]
     return data
 
 
@@ -41,9 +42,13 @@ def extract_data(data, cluster, starting_point):
         sorted_cluster.append(starting_point)
     sorted_cluster = sorted(sorted_cluster)
     nvc = len(sorted_cluster)
-    cluster_data = {'num_vehicles': 1, 'nv': nvc, 'distance_matrix': [[]] * nvc, 'depot': cluster.index(starting_point)}
+    cluster_data = {'num_vehicles': 1, 'nv': nvc, 'distance_matrix': [[]] * nvc, 'depot': cluster.index(starting_point),
+                    'rewards': [] * nvc}
     for i in range(nvc):
         cluster_data['distance_matrix'][i] = [data['distance_matrix'][sorted_cluster[i]][j] for j in sorted_cluster]
+
+    cluster_data['rewards'] = [data['rewards'][sorted_cluster[i]] for i in range(nvc)]
+
     return cluster_data
 
 

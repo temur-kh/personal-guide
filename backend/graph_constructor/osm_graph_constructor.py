@@ -1,12 +1,15 @@
 import os
 from collections import defaultdict
 import networkx as nx
+import numpy as np
 
 from graph_constructor.osm_graph import OsmGraph
 from graph_constructor.graph_constructor import GraphConstructor
 
 MAX_DIST = 2_000
 INF_DIST = 1_000_000
+
+AVERAGE_RATE = 1.5
 
 
 class OsmGraphConstructor(GraphConstructor):
@@ -39,7 +42,8 @@ class OsmGraphConstructor(GraphConstructor):
             graph = graph.subgraph(Gcc[0]).copy()
             data = self.create_data(graph, lat, lon, dist, tags, max_points)
             osm_graph = OsmGraph(graph, path, data)
-            osm_graph.save(fnam)
+            if self.cache:
+                osm_graph.save(fnam)
             return osm_graph
 
     def find_way(self, lat, lon, dist):
@@ -58,7 +62,8 @@ class OsmGraphConstructor(GraphConstructor):
             'num_vehicles': 1,
             'depot': len(points) - 1,
             'distance_matrix': [[]] * len(points),
-            'poi_path': [[]] * len(points)
+            'poi_path': [[]] * len(points),
+            'rewards': self._get_poi_rewards(points)
         }
         for i in range(data['nv']):
             start = data['ids'][i]
@@ -89,3 +94,10 @@ class OsmGraphConstructor(GraphConstructor):
         if max_points is not None:
             poi = poi[:max_points]
         return poi
+
+    @staticmethod
+    def _get_poi_rewards(points):
+        rewards = np.array([p['rate'] if 'rate' in p else np.nan for p in points])
+        rewards[np.isnan(rewards)] = max(np.nanmean(rewards), AVERAGE_RATE)
+        rewards = (10 * rewards).astype(int)
+        return list(rewards)

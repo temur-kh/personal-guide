@@ -14,6 +14,7 @@ def main():
     need_return = False
 
     data = dt.create_data_model_distance()
+
     nclusters = 2
     clusters = dt.create_clusters(data['nv'], nclusters)
     print(clusters)
