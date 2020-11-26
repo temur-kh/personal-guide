@@ -283,7 +283,7 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
 
     visited_nodes = []
     arc_literals = {}
-    VISIT_VALUES = [1] * num_nodes
+    visit_rewards = data['rewards']
 
     # Create the circuit constraint.
     arcs = []
@@ -292,7 +292,7 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
         arcs.append([i, i, is_visited.Not()])
 
         obj_vars.append(is_visited)
-        obj_coeffs.append(VISIT_VALUES[i])
+        obj_coeffs.append(visit_rewards[i])
 
         visited_nodes.append(is_visited)
 
@@ -322,6 +322,7 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
 
     # Solve and print out the solution.
     solver = cp_model.CpSolver()
+    # solver.parameters.max_time_in_seconds = 0.5
     solver.parameters.log_search_progress = True
     # To benefit from the linearization of the circuit constraint.
     solver.parameters.linearization_level = 2
@@ -339,7 +340,7 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
         route_distance = 0
         value_collected = 0
         while not route_is_finished:
-            value_collected += VISIT_VALUES[current_node]
+            value_collected += visit_rewards[current_node]
             for i in all_nodes:
                 if i == current_node:
                     continue
