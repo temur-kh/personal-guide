@@ -15,11 +15,12 @@ def get_optimal_route(params):
 
     """
     time_for_route = params.get('duration', type=int)  # minutes
-    params['start_lat'] = params.get('start_lat', type=float)
-    params['start_lng'] = params.get('start_lng', type=float)
+    start_params = {}
+    start_params['start_lat'] = params.get('start_lat', type=float)
+    start_params['start_lng'] = params.get('start_lng', type=float)
     speed = 100  # meters in minute
-    params['distance'] = time_for_route * speed
-    params['tags'] = ['historic', 'food', 'pharmacy']
+    start_params['distance'] = time_for_route * speed
+    start_params['tags'] = ['historic', 'food', 'pharmacy']
 
     osm_data_processor = OSMDataProcessor()
     # query_result = osm_data_processor.get_nearest_points(
@@ -32,7 +33,7 @@ def get_optimal_route(params):
     # clustering_model = ClusteringModel()
     # labels = clustering_model.fit_predict(nearest_points)
     constructor = OsmGraphConstructor(osm_data_processor, "./cache/", cache=False)
-    graph = constructor.create_graph(params, max_points=50, city='Berlin')
+    graph = constructor.create_graph(start_params, max_points=50, city='Berlin')
     need_return = False
 
     opt = Optimizer(speed=speed)
