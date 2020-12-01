@@ -79,6 +79,7 @@ export default function BasicForm() {
         data.set("start_lat", startLatLng.lat);
         data.set("start_lng", startLatLng.lng);
         data.set("duration", duration);
+        data.set("trip_type", tripType);
 
         setLoadingStatus("loading");
         axios({

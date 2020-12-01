@@ -98,13 +98,14 @@ class OSMDataProcessor(DataProcessor):
             params=params
         )
 
-    def select_query(self, collection_name, params):
+    def select_query(self, collection_name, params, limit_number=0):
         """
         Запрос типа SELECT в базу данных.
 
         Params:
             collection_name(str) - имя коллекции.
             params(dict(str->str)) - словарь с параметрами для фильтрации.
+            limit_number(int) - ограничение на количество записей в ответе запроса.
 
         Returns:
             list - список объектов в коллекции, соответствующих запросу.
@@ -112,7 +113,11 @@ class OSMDataProcessor(DataProcessor):
         """
         if collection_name in self.db.collection_names():
             collection = self.db.get_collection(collection_name)
-            return list(collection.find(params))
+            return list(
+                collection
+                .find(params)
+                .limit(limit_number)
+            )
         return []
 
     def close_connection(self):
