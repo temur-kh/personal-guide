@@ -2,6 +2,8 @@ from data_processing.osm_data_processor import OSMDataProcessor
 from graph_constructor.osm_graph_constructor import OsmGraphConstructor
 from optimal_route.optimizer import Optimizer
 
+from utils.configuration import service, TRIP_TYPES_MAPPING
+
 
 def get_optimal_route(params):
     """
@@ -21,13 +23,16 @@ def get_optimal_route(params):
     speed = 100  # meters in minute
     start_params['distance'] = time_for_route * speed
     start_params['tags'] = ['historic', 'food', 'pharmacy']
+    # TODO считывать trip_type и дополнительные типы точек типа аптек и ресторанов
+    # trip_type = params.get('trip_type', type=str)
+    # start_params['tags'] = service[TRIP_TYPES_MAPPING][trip_type]
 
     osm_data_processor = OSMDataProcessor()
     # query_result = osm_data_processor.get_nearest_points(
     #     lat=lat,
     #     lon=lng,
     #     max_distance=distance,
-    #     tags=['historic', 'tourism']
+    #     tags=service[TRIP_TYPES_MAPPING][trip_type],
     # )
     # nearest_points = get_points_coordinates_from_query_result(query_result)
     # clustering_model = ClusteringModel()
@@ -43,10 +48,4 @@ def get_optimal_route(params):
 
 
 def get_path(og, route):
-    # result_paths = []
-    # points = []
-    # for index in route:
-    #     points.append({"lng": og.data['locations'][index][1], "lat": og.data['locations'][index][0]})
-    # for line in og.get_way(route):
-    #     result_paths.append({"lng": line[1], "lat": line[0]})
     return og.get_way(route)
