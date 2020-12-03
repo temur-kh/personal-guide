@@ -6,7 +6,7 @@ class Graph(ABC):
         pass
 
     @abstractmethod
-    def get_way(self, path):
+    def get_way(self, route):
         pass
 
     @abstractmethod

@@ -271,7 +271,6 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, need_ret
 
 def reward_collecting_tsp(data, distance_matrix, max_distance):
     num_nodes = data['nv']
-    print(f'num_nodes = {num_nodes}')
     all_nodes = range(num_nodes)
     model = cp_model.CpModel()
     obj_vars = []
@@ -357,4 +356,4 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
         print('Travelled distance:', route_distance)
         print('Value collected: ', value_collected)
 
-    return route
+    return route, route_distance
