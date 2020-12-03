@@ -1,12 +1,17 @@
 from flask import Flask, Blueprint, request, jsonify
 from flask_cors import CORS
-from general_service.service import get_optimal_route
 
+from data_processing.osm_data_processor import OSMDataProcessor
+from general_service.service import Service
+from graph_constructor.osm_graph_constructor import OsmGraphConstructor
 
 app = Flask(__name__)
 CORS(app)
 api = Blueprint('api', __name__)
 
+osm_data_processor = OSMDataProcessor()
+constructor = OsmGraphConstructor.create(osm_data_processor, "./cache/", cache=False)
+service = Service(constructor)
 
 @api.route('/submit', methods=['POST'])
 def handle_submit():
@@ -14,7 +19,7 @@ def handle_submit():
         print(request.form, flush=True)
 
         # do your processing logic here.
-        points, paths = get_optimal_route(request.form)
+        points, paths = service.get_optimal_route(request.form)
         return jsonify(points=points, paths=paths)
 
 
