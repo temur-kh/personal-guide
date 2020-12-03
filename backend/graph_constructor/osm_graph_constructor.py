@@ -119,6 +119,7 @@ class OsmGraphConstructor(GraphConstructor):
                         {category_constraint: [], ...}
                 distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv).
                 rewards(list) - список наград для точек интереса.
+                stop_time(list) - список врмени остановки на poi.
         """
         poi = self._get_poi(graph_poi, params, max_points)
         points = poi['points'] + [params['start_point']]
@@ -141,7 +142,8 @@ class OsmGraphConstructor(GraphConstructor):
             'depot': nv - 1,
             'constraints': poi['constraints'],
             'distance_matrix': distance_matrix,
-            'rewards': poi['rewards'] + [0]
+            'rewards': poi['rewards'] + [0],
+            'stop_time': poi['stop_time'] + [0]
         }
 
     def _find_way(self, params):
@@ -215,12 +217,14 @@ class OsmGraphConstructor(GraphConstructor):
                 points(list) - найденные элементы из mongo.
                 category(list) - категория найденных poi.
                 rewards(list) - список наград для poi.
+                stop_time(list) - список врмени остановки на poi.
                 constraints(dict) - словарь constraints с индексами(в points):
                         {category_constraint: [], ...}
         """
         poi = {'points': [],
                'category': [],
                'rewards': [],
+               'stop_time': [],
                'constraints': {}}
         points = self._find_poi(params)
         points = [node for node in points if node['id_osm'] in graph_poi.nodes()]
@@ -230,19 +234,18 @@ class OsmGraphConstructor(GraphConstructor):
             tags = [i for i, j in zip(params['tags'], global_tags) if j == global_tag]
             poi_tag = [node for node in points
                        if len(set(tags) & set(node['global_tags'])) > 0]
-            num_poi_tag = len(poi_tag)
             if global_tag in constraints_tags:
                 poi_tag = self._add_poi_rewards(graph_poi, poi_tag, global_tag)
                 if max_points is not None and len(poi_tag) > max_points:
                     poi_tag = self._clustering(poi_tag, max_points)
-                num_point = len(poi['points'])
-                poi['constraints'][global_tag] = list(range(num_point, num_point + num_poi_tag))
+                poi['constraints'][global_tag] = list(range(len(poi['points']), len(poi['points']) + len(poi_tag)))
             else:
                 poi_tag = poi_tag[:max_points]
                 poi_tag = self._add_poi_rewards(graph_poi, poi_tag, ATTRACTION_TAG)
-            poi['category'] += [global_tag] * num_poi_tag
+            poi['category'] += [global_tag] * len(poi_tag)
             poi['points'] += poi_tag
             poi['rewards'] += [node['reward'] for node in poi_tag]
+            poi['stop_time'] += [graph_poi.nodes[p['id_osm']]['stop_time'][global_tag] for p in poi_tag]
         return poi
 
     def _clustering(self, poi, n_clusters):
