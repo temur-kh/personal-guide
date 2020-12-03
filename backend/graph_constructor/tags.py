@@ -1,3 +1,4 @@
+ATTRACTION_TAG = 'attraction'
 constraints_tags = ['finance', 'food', 'pharmacy', 'post', 'shop', 'telephone', 'wc']
 all_tags = {'finance': 'finance',
             'finance_bank': 'finance',
@@ -26,6 +27,7 @@ all_tags = {'finance': 'finance',
 
             'wc': 'wc',
 
+            'entertainment': 'entertainment',
             'entertainment_art': 'entertainment',
             'entertainment_museum': 'entertainment',
             'entertainment_theatre': 'entertainment',
@@ -35,9 +37,11 @@ all_tags = {'finance': 'finance',
             'entertainment_planetarium': 'entertainment',
             'entertainment_aquarium': 'entertainment',
 
+            'religion': 'religion',
             'religion_building': 'religion',
             'religion_church': 'religion',
 
+            'tourism': 'tourism',
             'tourism_monument': 'tourism',
             'tourism_sculpture': 'tourism',
             'tourism_viewpoint': 'tourism',
@@ -46,6 +50,7 @@ all_tags = {'finance': 'finance',
 
             'architecture': 'architecture',
 
+            'historic': 'historic',
             'historic_historic': 'historic',
             'historic_tomb': 'historic',
             'historic_military': 'historic',

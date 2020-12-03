@@ -6,7 +6,7 @@ import numpy as np
 
 from graph_constructor.osm_graph import OsmGraph
 from graph_constructor.graph_constructor import GraphConstructor
-from graph_constructor.tags import constraints_tags, all_tags
+from graph_constructor.tags import constraints_tags, all_tags, ATTRACTION_TAG
 from ml_module.clustering_model import ClusteringModel
 
 MAX_DIST = 2_000
@@ -118,8 +118,9 @@ class OsmGraphConstructor(GraphConstructor):
                 constraints(dict) - словарь constraints с индексами(в ids):
                         {category_constraint: [], ...}
                 distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv).
+                rewards(list) - список наград для точек интереса.
         """
-        poi = self._get_poi(graph, params, max_points)
+        poi = self._get_poi(graph_poi, params, max_points)
         points = poi['points'] + [params['start_point']]
         nv = len(points)
         distance_matrix = [[]] * nv
@@ -140,7 +141,7 @@ class OsmGraphConstructor(GraphConstructor):
             'depot': nv - 1,
             'constraints': poi['constraints'],
             'distance_matrix': distance_matrix,
-            'rewards': self._get_poi_rewards(points)
+            'rewards': poi['rewards'] + [0]
         }
 
     def _find_way(self, params):
@@ -200,7 +201,7 @@ class OsmGraphConstructor(GraphConstructor):
                                          '$maxDistance': dist}}}
         return self.data_processor.select_query('poi', params)
 
-    def _get_poi(self, graph, params, max_points):
+    def _get_poi(self, graph_poi, params, max_points):
         """
         Получение свойств poi, ближайших к стартовой точке.
 
@@ -213,14 +214,16 @@ class OsmGraphConstructor(GraphConstructor):
             dict - найденные poi и их свойства. Ключи:
                 points(list) - найденные элементы из mongo.
                 category(list) - категория найденных poi.
+                rewards(list) - список наград для poi.
                 constraints(dict) - словарь constraints с индексами(в points):
                         {category_constraint: [], ...}
         """
         poi = {'points': [],
                'category': [],
+               'rewards': [],
                'constraints': {}}
         points = self._find_poi(params)
-        points = [node for node in points if node['id_osm'] in graph.nodes()]
+        points = [node for node in points if node['id_osm'] in graph_poi.nodes()]
 
         global_tags = [all_tags.get(tag) for tag in params['tags']]
         for global_tag in set(global_tags):
@@ -229,14 +232,17 @@ class OsmGraphConstructor(GraphConstructor):
                        if len(set(tags) & set(node['global_tags'])) > 0]
             num_poi_tag = len(poi_tag)
             if global_tag in constraints_tags:
+                poi_tag = self._add_poi_rewards(graph_poi, poi_tag, global_tag)
                 if max_points is not None and len(poi_tag) > max_points:
                     poi_tag = self._clustering(poi_tag, max_points)
                 num_point = len(poi['points'])
                 poi['constraints'][global_tag] = list(range(num_point, num_point + num_poi_tag))
-            # else:
-            #     poi_tag = poi_tag[:max_points]
+            else:
+                poi_tag = poi_tag[:max_points]
+                poi_tag = self._add_poi_rewards(graph_poi, poi_tag, ATTRACTION_TAG)
             poi['category'] += [global_tag] * num_poi_tag
             poi['points'] += poi_tag
+            poi['rewards'] += [node['reward'] for node in poi_tag]
         return poi
 
     def _clustering(self, poi, n_clusters):
@@ -250,9 +256,9 @@ class OsmGraphConstructor(GraphConstructor):
         Returns:
             list - точки интереса с максимальным reward в своем кластере.
         """
-        rewards = np.array(self._get_poi_rewards(poi))
         clustering_model = ClusteringModel(params={'n_clusters': n_clusters})
         labels = clustering_model.fit_predict([nd['location']['coordinates'] for nd in poi])
+        rewards = [node['reward'] for node in poi]
 
         order = np.lexsort((rewards, labels))
         idx = np.array([nd['id_osm'] for nd in poi])[order]
@@ -282,8 +288,30 @@ class OsmGraphConstructor(GraphConstructor):
         return [coord[1], coord[0]]
 
     @staticmethod
-    def _get_poi_rewards(points):
+    def _add_poi_rewards(graph_poi, points, category):
+        """
+        Добавление наград к точкам интереса.
+        Args:
+            points(list) - точки интереса из mongo.
+            category(str) - категория всех точек интереса.
+        Returns:
+            points(list) - точки интереса с аттрибутами `reward` (награда в каждой точке).
+        """
+
         rewards = np.array([p['rate'] if 'rate' in p else np.nan for p in points])
-        rewards[np.isnan(rewards)] = AVERAGE_RATE
+
+        if category != ATTRACTION_TAG:
+            centralities = np.array([graph_poi.nodes[p['id_osm']]['centrality'][category] for p in points])
+            rewards = np.array([centralities[i] if np.isnan(rewards[i]) else max(rewards[i], centralities[i])
+                                for i in range(len(points))])
+
+        if np.count_nonzero(~np.isnan(rewards)):
+            rewards[np.isnan(rewards)] = max(np.nanmean(rewards), AVERAGE_RATE)
+        else:
+            rewards[np.isnan(rewards)] = 1
+
         rewards = (10 * rewards).astype(int)
-        return list(rewards)
+        rewards[rewards == 0] = 1
+        for i, node in enumerate(points):
+            node['reward'] = rewards[i]
+        return points
