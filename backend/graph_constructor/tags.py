@@ -54,3 +54,5 @@ attraction_tags = {'entertainment_art': 'entertainment',
                    'historic_city': 'historic',
                    'historic_archaeological': 'historic',
                    'historic_memorial': 'historic'}
+
+ATTRACTION_TAG = 'attraction'
