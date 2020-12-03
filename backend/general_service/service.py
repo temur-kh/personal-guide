@@ -23,8 +23,9 @@ def get_optimal_route(params):
     speed = 100  # meters in minute
     start_params['distance'] = time_for_route * speed
     start_params['tags'] = ['historic', 'food', 'pharmacy']
-    trip_type = params.get('trip_type', type=str)
-    start_params['tags'] = service[TRIP_TYPES_MAPPING][trip_type]
+    # TODO считывать trip_type и дополнительные типы точек типа аптек и ресторанов
+    # trip_type = params.get('trip_type', type=str)
+    # start_params['tags'] = service[TRIP_TYPES_MAPPING][trip_type]
 
     osm_data_processor = OSMDataProcessor()
     # query_result = osm_data_processor.get_nearest_points(
