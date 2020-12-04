@@ -117,7 +117,8 @@ class OsmGraphConstructor(GraphConstructor):
                 depot(int) - индекс(в ids) стартовой точки.
                 constraints(dict) - словарь constraints с индексами(в ids):
                         {category_constraint: [], ...}
-                distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv).
+                distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
+                rewards(list) - список наград для точек интереса.
                 rewards(list) - список наград для точек интереса.
                 stop_time(list) - список врмени остановки на poi.
         """

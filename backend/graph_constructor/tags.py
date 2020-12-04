@@ -1,4 +1,3 @@
-ATTRACTION_TAG = 'attraction'
 constraints_tags = ['finance', 'food', 'pharmacy', 'post', 'shop', 'telephone', 'wc']
 all_tags = {'finance': 'finance',
             'finance_bank': 'finance',
@@ -59,3 +58,5 @@ all_tags = {'finance': 'finance',
             'historic_city': 'historic',
             'historic_archaeological': 'historic',
             'historic_memorial': 'historic'}
+
+ATTRACTION_TAG = 'attraction'

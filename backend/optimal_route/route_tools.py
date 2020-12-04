@@ -269,7 +269,38 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, need_ret
     return routes[max_route_ids[min_dist_id]]
 
 
-def reward_collecting_tsp(data, distance_matrix, max_distance):
+class SolutionWithLimit(cp_model.CpSolverSolutionCallback):
+    def __init__(self, limit):
+        cp_model.CpSolverSolutionCallback.__init__(self)
+        self.__solution_count = 0
+        self.__solution_limit = limit
+
+    def on_solution_callback(self):
+        self.__solution_count += 1
+        if self.__solution_count >= self.__solution_limit:
+            print('Stop search after %i solutions' % self.__solution_limit)
+            self.StopSearch()
+
+    def solution_count(self):
+        return self.__solution_count
+
+
+def reward_collecting_tsp(data, max_distance):
+    """
+    data(dict) - информациея о poi. Ключи:
+                ids(list) - список id_osm.
+                category(list) - список категорий poi.
+                locations(list) - список координат poi в формате: [lat, lon].
+                nv(int) - кол-во poi.
+                num_vehicles(int)
+                depot(int) - индекс(в ids) стартовой точки.
+                constraints(dict) - словарь constraints с индексами(в ids):
+                        {category_constraint: [], ...}
+                distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
+                rewards(list) - список наград для точек интереса.
+    """
+    print("Total number of points:", len(data['rewards']), flush=True)
+    print("All rewards:", data['rewards'], flush=True)
     num_nodes = data['nv']
     all_nodes = range(num_nodes)
     model = cp_model.CpModel()
@@ -283,6 +314,7 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
     visited_nodes = []
     arc_literals = {}
     visit_rewards = data['rewards']
+    distance_matrix = data['distance_matrix']
 
     # Create the circuit constraint.
     arcs = []
@@ -311,6 +343,9 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
     starting_point = data['depot']
     model.Add(visited_nodes[starting_point] == 1)
 
+    for constraint, idxs in data['constraints'].items():
+        model.Add(sum(visited_nodes[i] for i in idxs) == 1)
+
     # The maximal distance of a route should not exceed max_distance
 
     model.Add(sum(lits[i] * dists[i] for i in range(len(lits))) <= max_distance)
@@ -321,12 +356,16 @@ def reward_collecting_tsp(data, distance_matrix, max_distance):
 
     # Solve and print out the solution.
     solver = cp_model.CpSolver()
-    # solver.parameters.max_time_in_seconds = 0.5
+    solver.parameters.max_time_in_seconds = 20
     solver.parameters.log_search_progress = True
     # To benefit from the linearization of the circuit constraint.
     solver.parameters.linearization_level = 2
 
-    solver.Solve(model)
+    # находит первое решение и возвращает его
+    solution_printer = SolutionWithLimit(1)
+    solver.SolveWithSolutionCallback(model, solution_printer)
+    # solver.Solve(model)
+
     print(solver.ResponseStats())
 
     first_visited_node = starting_point

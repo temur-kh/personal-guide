@@ -1,9 +1,9 @@
-import data as dt
-import route_tools as rt
+from . import data as dt
+from . import route_tools as rt
 import time
 import multiprocessing as multi
 
-#multi.set_start_method('fork', force=True)
+# multi.set_start_method('fork', force=True)
 
 MAX_DISTANCE_IN_MAP = 10000
 
@@ -44,10 +44,17 @@ class Optimizer:
     def solve(self, data, time_for_route, need_return=False):
 
         """
-            data - словарь с ключами:
-                distance_matrix - матрица расстояний между всеми точками
-                depot - индекс стартовой вершины
-                nv - число вершин
+            data(dict) - информациея о poi. Ключи:
+                ids(list) - список id_osm.
+                category(list) - список категорий poi.
+                locations(list) - список координат poi в формате: [lat, lon].
+                nv(int) - кол-во poi.
+                num_vehicles(int)
+                depot(int) - индекс(в ids) стартовой точки.
+                constraints(dict) - словарь constraints с индексами(в ids):
+                        {category_constraint: [], ...}
+                distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
+                rewards(list) - список наград для точек интереса.
             time_for_route - время на маршрут
             need_return = bool, нужно ли возвращаться в стартовую точку
         """
@@ -56,16 +63,14 @@ class Optimizer:
         if not need_return:
             correct_distance_matrix_no_return(data)
 
-        distance_matrix = data['distance_matrix']
-
         USE_OR_HEURISTIC = False
-
         start = time.time()
         if USE_OR_HEURISTIC:
+            distance_matrix = data['distance_matrix']
             route = rt.find_route_with_distance_limit(data, distance_matrix, walking_dist,
                                                       need_return, hard=True)
         else:
-            route, route_distance = rt.reward_collecting_tsp(data, distance_matrix, walking_dist)
+            route, route_distance = rt.reward_collecting_tsp(data, walking_dist)
         end = time.time()
         print('OR calculation time is {}'.format(end - start), flush=True)
         if not need_return:
@@ -131,4 +136,3 @@ class Optimizer:
         pool.close()
 
         return routes
-
