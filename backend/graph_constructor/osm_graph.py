@@ -21,6 +21,8 @@ class OsmGraph(Graph):
                constraints(dict) - словарь constraints с индексами(в ids).
                        {category_constraint: [], ...}
                distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv).
+               rewards(list) - список наград для точек интереса.
+               stop_time(list) - список врмени остановки на poi.
         """
         super().__init__()
         self.graph = graph
@@ -43,12 +45,10 @@ class OsmGraph(Graph):
         """
         line_string = []
         points = []
-        if len(self.data['ids']) > 0:
+        if len(self.data['ids']) > 0 and len(set(route)) > 1:
             for iv, jv in zip(route[:-1], route[1:]):
                 points.append(self._poi_location(iv))
                 length, path = nx.single_source_dijkstra(self.graph, self.data['ids'][iv], self.data['ids'][jv])
-                if length > 800:
-                    print(self.data['ids'][iv], self.data['ids'][jv], length)
                 for i, j in zip(path[:-1], path[1:]):
                     for line in self.way[i][j]:
                         line_string.append({'lng': line[1], 'lat': line[0]})
