@@ -1,5 +1,9 @@
-from . import data as dt
-from . import route_tools as rt
+try:
+    from . import data as dt
+    from . import route_tools as rt
+except:
+    import data as dt
+    import route_tools as rt
 import time
 import multiprocessing as multi
 
@@ -97,8 +101,7 @@ class Optimizer:
             cluster_data = dt.extract_data(data, cluster, starting_point)
             if not need_return:
                 correct_distance_matrix_no_return(cluster_data)
-            distance_matrix = cluster_data['distance_matrix']
-            route, route_distance = rt.reward_collecting_tsp(cluster_data, distance_matrix,
+            route, route_distance = rt.reward_collecting_tsp(cluster_data,
                                                              walking_dist - all_route_dist)
             if not need_return:
                 route.pop()
@@ -125,13 +128,14 @@ class Optimizer:
 
     def solve_parallel(self, data, clusters, time_for_route, need_return=False):
         n_processes = 2  # multi.cpu_count()
-        pool = multi.Pool(n_processes)
-
-        results = [
-            pool.apply_async(self.solve_worker, args=(id, n_processes, data, clusters, time_for_route, need_return))
-            for id in range(n_processes)]
-
+        # TODO дебаг, чтобы логи процесса отображались.
+        #  Раскомментить код снизу и удалить последнюю строчку с results
+        # pool = multi.Pool(n_processes)
+        # results = [
+        #     pool.apply_async(self.solve_worker, args=(id, n_processes, data, clusters, time_for_route, need_return))
+        #     for id in range(n_processes)]
+        results = [self.solve_worker(1, n_processes, data, clusters, time_for_route, need_return)]
         routes = [p.get() for p in results]
-        pool.close()
+        # pool.close()
 
         return routes

@@ -43,7 +43,10 @@ def extract_data(data, cluster, starting_point):
     sorted_cluster = sorted(sorted_cluster)
     nvc = len(sorted_cluster)
     cluster_data = {'num_vehicles': 1, 'nv': nvc, 'distance_matrix': [[]] * nvc, 'depot': cluster.index(starting_point),
-                    'rewards': [] * nvc}
+                    'rewards': [] * nvc, 'constraints': {}}
+
+    # TODO надо как-то разбивку contraints добавить, чтобы индексы не помешались и лишние индексы не включились
+
     for i in range(nvc):
         cluster_data['distance_matrix'][i] = [data['distance_matrix'][sorted_cluster[i]][j] for j in sorted_cluster]
 
