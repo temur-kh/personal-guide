@@ -299,6 +299,7 @@ def reward_collecting_tsp(data, max_distance):
                 distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
                 rewards(list) - список наград для точек интереса.
     """
+    print("Total number of points:", len(data['rewards']), flush=True)
     print("All rewards:", data['rewards'], flush=True)
     num_nodes = data['nv']
     all_nodes = range(num_nodes)
