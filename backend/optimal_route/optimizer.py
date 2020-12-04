@@ -95,7 +95,6 @@ class Optimizer:
         starting_point = data['depot']
         for cluster in clusters:
             cluster_data = dt.extract_data(data, cluster, starting_point)
-            print(cluster_data)
             if not need_return:
                 correct_distance_matrix_no_return(cluster_data)
             distance_matrix = cluster_data['distance_matrix']
@@ -108,14 +107,14 @@ class Optimizer:
 
             for r in route:
                 all_route.append(cluster[r])
-                print(cluster[r])
+                print(cluster[r], flush=True)
 
             all_route_dist += route_distance
             starting_point = all_route[-1]
             if all_route_dist >= walking_dist:
                 break
 
-        print(f'total distance = {all_route_dist}')
+        print(f'total distance = {all_route_dist}', flush=True)
         return all_route
 
     def solve_worker(self, id, n_processes, data, clusters, time_for_route, need_return):
