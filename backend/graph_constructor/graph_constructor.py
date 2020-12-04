@@ -7,5 +7,5 @@ class GraphConstructor(ABC):
         pass
 
     @abstractmethod
-    def create_graph(self, params, max_points=None, city=None):
+    def create_graph(self, params, max_points=None):
         pass
