@@ -14,7 +14,7 @@
 
 **Data constraints**
 
-```json
+```
 {
     "start_lat": "<широта стартовой точки (float)>",
     "start_lng": "<долгота стартовой точки (float)>",
@@ -25,7 +25,7 @@
 
 **Data example**
 
-```json
+```
 {
     "start_lat": "52.51489690989536",
     "start_lng": "13.389158248901369",
@@ -40,7 +40,7 @@
 
 **Content constraints**
 
-```json
+```
 {
     "points": [
         {
@@ -62,7 +62,7 @@
 
 **Content example**
 
-```json
+```
 {
     "points": [
         {
@@ -107,6 +107,6 @@
 
 **Content** :
 
-```json
+```
 {}
 ```
