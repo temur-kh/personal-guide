@@ -25,7 +25,7 @@ class Service():
         start_params = {'start_lat': params.get('start_lat', type=float),
                         'start_lng': params.get('start_lng', type=float),
                         'distance': time_for_route * speed,
-                        'tags': ['historic', 'food', 'pharmacy']}
+                        'tags': ['historic', 'pharmacy']}
         max_points = int(25 * time_for_route / 60)
         print("Max points:", max_points, flush=True)
         # TODO считывать trip_type и дополнительные типы точек типа аптек и ресторанов

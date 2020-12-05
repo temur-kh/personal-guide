@@ -119,7 +119,6 @@ class OsmGraphConstructor(GraphConstructor):
                         {category_constraint: [], ...}
                 distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
                 rewards(list) - список наград для точек интереса.
-                rewards(list) - список наград для точек интереса.
                 stop_time(list) - список врмени остановки на poi.
         """
         poi = self._get_poi(graph_poi, params, max_points)
