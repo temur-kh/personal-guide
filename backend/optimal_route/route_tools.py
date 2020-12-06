@@ -285,7 +285,7 @@ class SolutionWithLimit(cp_model.CpSolverSolutionCallback):
         return self.__solution_count
 
 
-def reward_collecting_tsp(data, max_distance):
+def reward_collecting_tsp(data, max_distance, stop_dists=None):
     """
     data(dict) - информациея о poi. Ключи:
                 ids(list) - список id_osm.
@@ -298,23 +298,26 @@ def reward_collecting_tsp(data, max_distance):
                         {category_constraint: [], ...}
                 distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
                 rewards(list) - список наград для точек интереса.
+                stop_time(list) - список врмени остановки на poi.
     """
     print("Total number of points:", len(data['rewards']), flush=True)
     print("All rewards:", data['rewards'], flush=True)
+
     num_nodes = data['nv']
+    visit_rewards = data['rewards']
+    distance_matrix = data['distance_matrix']
+
     all_nodes = range(num_nodes)
     model = cp_model.CpModel()
+
     obj_vars = []
     obj_coeffs = []
     lits = []
     dists = []
-
+    stops = []
     route = []
-
     visited_nodes = []
     arc_literals = {}
-    visit_rewards = data['rewards']
-    distance_matrix = data['distance_matrix']
 
     # Create the circuit constraint.
     arcs = []
@@ -337,6 +340,8 @@ def reward_collecting_tsp(data, max_distance):
 
             lits.append(lit)
             dists.append(int(distance_matrix[i][j]))
+            if stop_dists:
+                stops.append(stop_dists[j])
 
     model.AddCircuit(arcs)
 
@@ -348,7 +353,10 @@ def reward_collecting_tsp(data, max_distance):
 
     # The maximal distance of a route should not exceed max_distance
 
-    model.Add(sum(lits[i] * dists[i] for i in range(len(lits))) <= max_distance)
+    if stop_dists:
+        model.Add(sum(lits[i] * (dists[i] + stops[i]) for i in range(len(lits))) <= max_distance)
+    else:
+        model.Add(sum(lits[i] * dists[i] for i in range(len(lits))) <= max_distance)
 
     # Maximize reward from visited nodes.
     model.Maximize(
