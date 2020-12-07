@@ -9,15 +9,16 @@ import Typography from "@material-ui/core/Typography";
 import {makeStyles} from "@material-ui/core/styles";
 
 const useStyles = makeStyles((_) => ({
-    input: {
-        margin: 5,
-    },
+    root: {
+        backgroundColor: "#eaeaea",
+        height: "100vh"
+    }
 }));
 
 function App() {
     const classes = useStyles();
     return (
-        <Container>
+        <Container maxWidth="false" className={classes.root}>
             <AppBar position="static">
                 <Toolbar>
                     <Typography variant="h6" className={classes.title}>

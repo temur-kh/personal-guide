@@ -19,7 +19,10 @@
     "start_lat": "<широта стартовой точки (float)>",
     "start_lng": "<долгота стартовой точки (float)>",
     "duration": "<максимальная длительность прогулки (int)>",
-    "trip_type": "<тип маршрута (str)>"
+    "trip_type": "<тип маршрута (str)>",
+    "need_return": "<нужно ли вернуться в начальную точку(bool)>",
+    "tags": "<список тегов для точек интереса(array(str))>",
+    "constaints": <список тегов для дополнительных точек в маршруте(array(str))>"
 }
 ```
 
@@ -30,7 +33,10 @@
     "start_lat": "52.51489690989536",
     "start_lng": "13.389158248901369",
     "duration": "60",
-    "trip_type": "history"
+    "trip_type": "history",
+    "need_return": "false",
+    "tags": ["tourism_monument", "tourism_viewpoint", "tourism_fountain"],
+    "constraints": ["pharmacy", "shop", "food_restaurant"]
 }
 ```
 
