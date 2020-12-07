@@ -363,7 +363,10 @@ def reward_collecting_tsp(data, max_distance):
 
     # находит первое решение и возвращает его
     solution_printer = SolutionWithLimit(1)
-    solver.SolveWithSolutionCallback(model, solution_printer)
+    solverStatus = solver.SolveWithSolutionCallback(model, solution_printer)
+    if solverStatus == 3: #INFEASIBLE
+        return [], 0
+    print(f'solverStatus = {solverStatus}')
     # solver.Solve(model)
 
     print(solver.ResponseStats())

@@ -43,7 +43,7 @@ class Optimizer:
             Having time in minutes, estimate distance in m
         """
 
-        return self.speed * t
+        return int(self.speed * t)
 
     def solve(self, data, time_for_route, need_return=False):
 
@@ -77,7 +77,7 @@ class Optimizer:
             route, route_distance = rt.reward_collecting_tsp(data, walking_dist)
         end = time.time()
         print('OR calculation time is {}'.format(end - start), flush=True)
-        if not need_return:
+        if not need_return and len(route) > 1:
             route.pop()
 
         return route
@@ -103,6 +103,9 @@ class Optimizer:
                 correct_distance_matrix_no_return(cluster_data)
             route, route_distance = rt.reward_collecting_tsp(cluster_data,
                                                              walking_dist - all_route_dist)
+            if len(route) == 0:
+                return all_route
+
             if not need_return:
                 route.pop()
             if len(all_route) > 0:
@@ -130,11 +133,11 @@ class Optimizer:
         n_processes = 2  # multi.cpu_count()
         # TODO дебаг, чтобы логи процесса отображались.
         #  Раскомментить код снизу и удалить последнюю строчку с results
-        # pool = multi.Pool(n_processes)
-        # results = [
-        #     pool.apply_async(self.solve_worker, args=(id, n_processes, data, clusters, time_for_route, need_return))
-        #     for id in range(n_processes)]
-        results = [self.solve_worker(1, n_processes, data, clusters, time_for_route, need_return)]
+        pool = multi.Pool(n_processes)
+        results = [
+            pool.apply_async(self.solve_worker, args=(id, n_processes, data, clusters, time_for_route, need_return))
+            for id in range(n_processes)]
+        #results = [self.solve_worker(1, n_processes, data, clusters, time_for_route, need_return)]
         routes = [p.get() for p in results]
         # pool.close()
 

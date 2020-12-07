@@ -24,6 +24,7 @@ def create_data_model_distance():
     data['depot'] = 0
     data['nv'] = 13
     data['rewards'] = [1 for i in range(data['nv'])]
+    data['constraints'] = {}
     return data
 
 
