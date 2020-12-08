@@ -5,7 +5,7 @@ import {useLocation} from "react-router-dom";
 export default function ResultForm() {
     const response = useLocation().response;
     return (
-        <Container>
+        <Container maxWidth="false">
             <ResultMapComponent pathData={response}/>
         </Container>
     );

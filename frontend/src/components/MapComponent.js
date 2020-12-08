@@ -5,7 +5,6 @@ import {Map, Marker, Popup, TileLayer} from 'react-leaflet'
 import "../css/MapComponent.css"
 
 type State = {
-    hasLocation: boolean,
     latlng: {
         lat: number,
         lng: number,
@@ -14,10 +13,9 @@ type State = {
 
 export default class MapComponent extends Component<{}, State> {
     state = {
-        hasLocation: false,
         latlng: {
-            lat: 52.5198810,
-            lng: 13.4073380
+            lat: 52.5149111,
+            lng: 13.3910441
         },
     }
 
@@ -25,7 +23,6 @@ export default class MapComponent extends Component<{}, State> {
 
     handleClick = (e: Object) => {
         this.setState({
-            hasLocation: true,
             latlng: e.latlng,
         })
         if (this.props.onChange) {
@@ -34,11 +31,10 @@ export default class MapComponent extends Component<{}, State> {
     }
 
     render() {
-        const marker = this.state.hasLocation ? (
+        const marker =
             <Marker position={this.state.latlng}>
-                <Popup>You are here</Popup>
+                <Popup>Стартовая точка</Popup>
             </Marker>
-        ) : null
 
         return (
             <Map

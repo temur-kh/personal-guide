@@ -1,9 +1,4 @@
-import time
-
 from optimal_route.optimizer import Optimizer
-
-from utils.configuration import service, TRIP_TYPES_MAPPING
-
 
 class Service():
     def __init__(self, constructor):
@@ -21,16 +16,17 @@ class Service():
 
         """
         time_for_route = params.get('duration', type=int)  # minutes
+        tags = params.get('tags').split(',')
+        constraints = params.get('constraints').split(',')
         speed = 66  # meters in minute
         start_params = {'start_lat': params.get('start_lat', type=float),
                         'start_lng': params.get('start_lng', type=float),
                         'distance': time_for_route * speed,
-                        'tags': ['historic', 'pharmacy']}
+                        'tags': tags + constraints}
+        need_return = True if params.get('need_return') == 'true' else False
         max_points = int(25 * time_for_route / 60)
         print("Max points:", max_points, flush=True)
         # TODO считывать trip_type и дополнительные типы точек типа аптек и ресторанов
-        # trip_type = params.get('trip_type', type=str)
-        # start_params['tags'] = service[TRIP_TYPES_MAPPING][trip_type]
 
         # osm_data_processor = OSMDataProcessor()
         # query_result = osm_data_processor.get_nearest_points(
@@ -44,8 +40,6 @@ class Service():
         # labels = clustering_model.fit_predict(nearest_points)
         # constructor = OsmGraphConstructor(osm_data_processor, "./cache/", cache=False)
         graph = self.constructor.create_graph(start_params, max_points=max_points)
-
-        need_return = False
 
         opt = Optimizer(speed=speed)
         route = opt.solve(graph.data, time_for_route, need_return=need_return)
