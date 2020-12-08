@@ -3,12 +3,14 @@ import networkx as nx
 
 from graph_constructor.graph import Graph
 
+INF_DIST = 1_000_000
+
 
 class OsmGraph(Graph):
     def __init__(self, graph, way, data):
         """
         Params:
-            graph(networkx.Graph) - граф города лтбо граф вокруг стратовой точки.
+            graph(networkx.Graph) - граф вокруг стратовой точки.
             way(dict) - словарь путей между точками.
                {id_osm_start: {id_osm_end: [[lat, lon], ...], ...}, ...}
             data(dict) - информациея о poi. Ключи:
@@ -23,6 +25,7 @@ class OsmGraph(Graph):
                distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv).
                rewards(list) - список наград для точек интереса.
                stop_time(list) - список врмени остановки на poi.
+               info(list) - список словарей с полями: description, photo
         """
         super().__init__()
         self.graph = graph
@@ -54,6 +57,51 @@ class OsmGraph(Graph):
                         line_string.append({'lng': line[1], 'lat': line[0]})
             points.append(self._poi_location(route[-1]))
         return points, line_string
+
+    @staticmethod
+    def create(graph, way, poi):
+        """
+        Args:
+            graph(networkx.Graph) - граф вокруг стратовой точки.
+            way(dict) - словарь путей между точками.
+               {id_osm_start: {id_osm_end: [[lat, lon], ...], ...}, ...}
+            poi(dict) - poi, которые войдут в data и их свойства. Ключи:
+                points_id(list) - id выбранных poi.
+                points(list) - элементы из mongo (порядок НЕ соответсвует points_id).
+                category(list) - категория выбранных poi (порядок соответсвует points_id).
+                constraints(dict) - словарь constraints с индексами(в points):
+                        {category_constraint: [], ...}
+        Returns:
+
+        """
+        dist_matrix = {nd['id_osm']: nd.get('dist_matrix') for nd in poi['points']}
+        points_info = {nd['id_osm']: {'dist_matrix': nd.get('dist_matrix'),
+                                      'description': nd.get('description'),
+                                      'photo': nd.get('photo'),
+                                      'name': nd.get('photo')} for nd in poi['points']}
+        nv = len(poi['points_id'])
+        distance_matrix = [[]] * nv
+        for i in range(nv):
+            length = dist_matrix[poi['points_id'][i]]
+            distance_matrix[i] = [length.get(nd, INF_DIST) for nd in poi['points_id']]
+        stop_time = [graph.nodes[nd].get('stop_time', {}).get(category, 0)
+                     for nd, category in zip(poi['points_id'], poi['category'])]
+        reward = [graph.nodes[nd].get('reward', {}).get(category, 0)
+                  for nd, category in zip(poi['points_id'], poi['category'])]
+        data = {
+            'ids': poi['points_id'],
+            'category': poi['category'],
+            'locations': [graph.nodes[nd]['location'] for nd in poi['points_id']],
+            'nv': nv,
+            'num_vehicles': 1,
+            'depot': nv - 1,
+            'constraints': poi['constraints'],
+            'distance_matrix': distance_matrix,
+            'rewards': reward,
+            'stop_time': stop_time,
+            'info': [points_info[nd] for nd in poi['points_id']]
+        }
+        return OsmGraph(graph, way, data)
 
     def save(self, file_name):
         """

@@ -1,18 +1,14 @@
 import os
 import pickle
-from collections import defaultdict
 import networkx as nx
 import numpy as np
 
+from graph_constructor.Error import not_found_city, not_found_poi
 from graph_constructor.osm_graph import OsmGraph
 from graph_constructor.graph_constructor import GraphConstructor
-from graph_constructor.tags import constraints_tags, all_tags, ATTRACTION_TAG
+from graph_constructor.starting_params import StartingParams
+from graph_constructor.tags import constraints_tags, attractions_tags
 from ml_module.clustering_model import ClusteringModel
-
-MAX_DIST = 2_000
-INF_DIST = 1_000_000
-
-AVERAGE_RATE = 1.5
 
 
 class OsmGraphConstructor(GraphConstructor):
@@ -35,19 +31,17 @@ class OsmGraphConstructor(GraphConstructor):
             city = file.split('.')[0]
             fcity = os.path.join(city_dir, file)
             with open(fcity, 'rb') as f:
-                graph_poi, graph, path = pickle.load(f)
-            cities[city] = {'graph_poi': graph_poi,
-                            'graph': graph,
+                graph, path = pickle.load(f)
+            cities[city] = {'graph': graph,
                             'path': path}
-
         return OsmGraphConstructor(data_processor, cdir, cities, cache=cache)
 
-    def create_graph(self, params, max_points=None):
+    def create_graph(self, start_params, max_points=None):
         """
         Создание OsmGraph вокруг стартовой точки.
 
         Params:
-             params(dict) - параметры с ограничениями для маршрута. Ключи:
+             start_params(dict) - параметры с ограничениями для маршрута. Ключи:
                 'start_lat'(float) - широта стартовой точки.
                 'start_lng'(float) - долгота стартовой точки.
                 'distance' (int) - максимальный путь, который пройдет человек.
@@ -57,264 +51,170 @@ class OsmGraphConstructor(GraphConstructor):
         Returns:
             osm_graph
         """
-        params['start_point'] = self._find_node(params)
-        city = params['start_point'].get('city')
+        params = StartingParams(start_params)
+        start_point = self._find_node(params)
+        if start_point is None:
+            raise not_found_city()
+        params.set_start_point(start_point)
 
-        coord = self._get_coord(params['start_point'])
-        key = "_".join((str(coord),
-                        str(params['distance']),
-                        str(params['tags'])))
+        key = params.get_key()
         fnam = os.path.join(self.cdir, f'osm_graph_{key}.pkl')
         if self.cache and os.path.isfile(fnam):
             return OsmGraph.load(fnam)
         else:
-            if self.cities.get(city) is not None:
-                graph_poi, graph, path = self.cities[city].values()
-                start = params['start_point']['id_osm']
-                if start not in graph_poi.nodes():
-                    try:
-                        length = nx.single_source_dijkstra_path_length(graph, start, cutoff=MAX_DIST)
-                    except nx.NetworkXNoPath:
-                        length = {}
-                    add_edges = [(start, end, weight) for end, weight in length.items() if end in graph_poi.nodes()]
-                    if len(add_edges) > 0:
-                        graph_poi.add_weighted_edges_from(add_edges)
-            else:
-                graph_poi = None
-                graph = nx.Graph()
-                ways = self._find_way(params)
-                add_edges = [(way['start'], way['end'], way['length']) for way in ways]
-                graph.add_weighted_edges_from(add_edges)
-                path = defaultdict(lambda: {})
-                for way in ways:
-                    path[way['start']][way['end']] = way['simple_way']
-                    path[way['end']][way['start']] = list(reversed(way['simple_way']))
-                path = dict(path)
-                Gcc = sorted(nx.connected_components(graph), key=len, reverse=True)
-                graph = graph.subgraph(Gcc[0]).copy()
-            data = self._create_data(params, graph, graph_poi=graph_poi, max_points=max_points)
-            osm_graph = OsmGraph(graph, path, data)
+            city = params.get_city()
+            graph = self.cities[city]['graph'].copy()
+            path = self.cities[city]['path']
+            try:
+                length = nx.single_source_dijkstra_path_length(graph, params.get_start_id(), cutoff=params.distance)
+            except nx.NetworkXNoPath:
+                raise not_found_poi()
+            params.start_point['dist_matrix'] = length
+
+            del_nodes = [nd for nd in graph.nodes() if nd not in length.keys()]
+            graph.remove_nodes_from(del_nodes)
+
+            poi = self._get_poi(graph, params, max_points)
+            if len(poi['points']) == 1:
+                return not_found_poi(self._get_available_tags(graph, params))
+            osm_graph = OsmGraph.create(graph, path, poi)
             if self.cache:
                 osm_graph.save(fnam)
             return osm_graph
-
-    def _create_data(self, params, graph, graph_poi=None, max_points=None):
-        """
-        Создание словаря с информацией о poi.
-
-        Args:
-            graph(networkx.Graph): - граф, в состав которого входят poi.
-            params(dict) - параметры с ограничениями для маршрута.
-            max_points(int) - максимальное кол-во poi в одной категории constraint.
-
-        Returns:
-            data(dict) - информациея о poi. Ключи:
-                ids(list) - список id_osm.
-                category(list) - список категорий poi.
-                locations(list) - список координат poi в формате: [lat, lon].
-                nv(int) - кол-во poi.
-                num_vehicles(int)
-                depot(int) - индекс(в ids) стартовой точки.
-                constraints(dict) - словарь constraints с индексами(в ids):
-                        {category_constraint: [], ...}
-                distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
-                rewards(list) - список наград для точек интереса.
-                stop_time(list) - список врмени остановки на poi.
-        """
-        poi = self._get_poi(graph_poi, params, max_points)
-        points = poi['points'] + [params['start_point']]
-        nv = len(points)
-        distance_matrix = [[]] * nv
-        if graph_poi is None:
-            graph_poi = graph
-        for i in range(nv):
-            try:
-                length = nx.single_source_dijkstra_path_length(graph_poi, points[i]['id_osm'], cutoff=MAX_DIST)
-            except nx.NetworkXNoPath:
-                length = {}
-            distance_matrix[i] = [length.get(nd['id_osm'], INF_DIST) for nd in points]
-        return {
-            'ids': [i['id_osm'] for i in points],
-            'category': poi['category'] + ['start_point'],
-            'locations': [self._get_coord(i) for i in points],
-            'nv': nv,
-            'num_vehicles': 1,
-            'depot': nv - 1,
-            'constraints': poi['constraints'],
-            'distance_matrix': distance_matrix,
-            'rewards': poi['rewards'] + [0],
-            'stop_time': poi['stop_time'] + [0]
-        }
-
-    def _find_way(self, params):
-        """
-        Поиск дорог из графа, ближайших к стартовой точке.
-
-        Args:
-            params(dict) - параметры с ограничениями для маршрута.
-
-        Returns:
-            list - список найденных дорог.
-        """
-        coord = self._get_coord(params['start_point'], inverse=True)
-        dist = params['distance']
-        params = {'location': {'$near': {'$geometry': {'type': 'LineString',
-                                                       'coordinates': coord},
-                                         '$maxDistance': dist}}}
-        return self.data_processor.select_query('ways_graph', params)
 
     def _find_node(self, params):
         """
         Поиск точки из графа, ближайшей к стартовой точке.
 
         Args:
-            params(dict) - параметры с ограничениями для поиска точки.
+            params(StartingParams) - стартовые ограничения.
 
         Returns:
             node - найденный элемент из mongo.
         """
-        coord = [params['start_lng'], params['start_lat']]
-        dist = params['distance']
-        params = {'location': {'$near': {'$geometry': {'type': 'Point',
-                                                       'coordinates': coord},
-                                         '$maxDistance': dist}}}
-        nodes = self.data_processor.select_query('nodes_graph', params, limit_number=1)
+        query = {'location': {'$near': {'$geometry': {'type': 'Point',
+                                                      'coordinates': params.start_coordinates},
+                                        '$maxDistance': params.distance}}}
+        nodes = self.data_processor.select_query('nodes_graph', query, limit_number=1)
         if len(nodes) > 0:
             return nodes[0]
+        return None
 
-        return {}
-
-    def _find_poi(self, params):
+    def _find_poi(self, params, points):
         """
         Поиск poi из графа, ближайших к стартовой точке.
 
         Args:
-            params(dict) - параметры с ограничениями для поиска точки.
+            params(StartingParams) - стартовые ограничения.
+            points(list) - список id_osm, которые необходимо получить из mongo.
 
         Returns:
             list - список найденных poi.
         """
-        coord = self._get_coord(params['start_point'], inverse=True)
-        dist = params['distance']
-        tags = params['tags']
-        params = {'global_tags': {'$in': tags},
-                  'location': {'$near': {'$geometry': {'type': 'Point',
-                                                       'coordinates': coord},
-                                         '$maxDistance': dist}}}
-        return self.data_processor.select_query('poi', params)
+        query = {'city': params.get_city(), 'id_osm': {'$in': points}}
+        return self.data_processor.select_query('poi', query)
 
-    def _get_poi(self, graph_poi, params, max_points):
+    def _get_poi(self, graph, params, max_points):
         """
         Получение свойств poi, ближайших к стартовой точке.
 
         Args:
             graph(networkx.Graph): - граф, в состав которого должны попадать найденные poi.
-            params(dict) - параметры с ограничениями для поиска точки.
+            params(StartingParams) - стартовые ограничения.
             max_points(int) - максимальное кол-во poi в одной категории constraint.
 
         Returns:
-            dict - найденные poi и их свойства. Ключи:
-                points(list) - найденные элементы из mongo.
-                category(list) - категория найденных poi.
-                rewards(list) - список наград для poi.
-                stop_time(list) - список врмени остановки на poi.
+            dict - выбранные poi и их свойства. Ключи:
+                points_id(list) - id выбранных poi.
+                points(list) - элементы из mongo.
+                category(list) - категория выбранных poi.
                 constraints(dict) - словарь constraints с индексами(в points):
                         {category_constraint: [], ...}
         """
-        poi = {'points': [],
+        poi = {'points_id': [],
                'category': [],
-               'rewards': [],
-               'stop_time': [],
                'constraints': {}}
-        points = self._find_poi(params)
-        points = [node for node in points if node['id_osm'] in graph_poi.nodes()]
-
-        global_tags = [all_tags.get(tag) for tag in params['tags']]
-        for global_tag in set(global_tags):
-            tags = [i for i, j in zip(params['tags'], global_tags) if j == global_tag]
-            poi_tag = [node for node in points
-                       if len(set(tags) & set(node['global_tags'])) > 0]
+        for global_tag, tags in params.global_tags.items():
+            poi_global_tag = list(nx.get_node_attributes(graph, global_tag).keys())
+            poi_tag = [node for node in poi_global_tag if len(set(tags) & set(graph.nodes[node][global_tag])) > 0]
+            rewards = np.array([graph.nodes[nd]['reward'][global_tag] for nd in poi_tag])
             if global_tag in constraints_tags:
-                poi_tag = self._add_poi_rewards(graph_poi, poi_tag, global_tag)
                 if max_points is not None and len(poi_tag) > max_points:
-                    poi_tag = self._clustering(poi_tag, max_points)
-                poi['constraints'][global_tag] = list(range(len(poi['points']), len(poi['points']) + len(poi_tag)))
+                    poi_tag = self._clustering(poi_tag, rewards, graph, max_points)
+                poi['constraints'][global_tag] = list(
+                    range(len(poi['points_id']), len(poi['points_id']) + len(poi_tag)))
             else:
-                poi_tag = poi_tag[:max_points]
-                poi_tag = self._add_poi_rewards(graph_poi, poi_tag, ATTRACTION_TAG)
+                if max_points is not None and len(poi_tag) > max_points:
+                    poi_tag = self._best_attraction(poi_tag, rewards, max_points)
             poi['category'] += [global_tag] * len(poi_tag)
-            poi['points'] += poi_tag
-            poi['rewards'] += [node['reward'] for node in poi_tag]
-            poi['stop_time'] += [graph_poi.nodes[p['id_osm']]['stop_time'][global_tag] for p in poi_tag]
+            poi['points_id'] += poi_tag
+        poi['points'] = self._find_poi(params, poi['points_id']) + [params.start_point]
+        poi['points_id'].append(params.get_start_id())
+        poi['category'].append('start_point')
         return poi
 
-    def _clustering(self, poi, n_clusters):
+    @staticmethod
+    def _clustering(poi, rewards, graph, n_clusters):
         """
         Классификация poi по карте и выбор максимального reward в кластере.
 
         Args:
-            poi(list) - точки интереса из mongo.
+            poi(list) - список id_osm из текущего тэга.
+            rewards(list) - награды для poi.
+            graph(networkx.Graph): - граф.
             n_clusters(int) - количество кластеров.
 
         Returns:
             list - точки интереса с максимальным reward в своем кластере.
         """
         clustering_model = ClusteringModel(params={'n_clusters': n_clusters})
-        labels = clustering_model.fit_predict([nd['location']['coordinates'] for nd in poi])
-        rewards = [node['reward'] for node in poi]
+        labels = clustering_model.fit_predict([graph.nodes[nd]['location'] for nd in poi])
 
         order = np.lexsort((rewards, labels))
-        idx = np.array([nd['id_osm'] for nd in poi])[order]
+        poi = np.array(poi)[order]
         labels = labels[order]
 
         index = np.empty(len(labels), 'bool')
         index[-1] = True
         index[:-1] = labels[1:] != labels[:-1]
-        best_poi = [node for node in poi if node['id_osm'] in idx[index]]
-        return best_poi
+        return list(poi[index])
 
     @staticmethod
-    def _get_coord(node, inverse=False):
+    def _best_attraction(poi, rewards, max_points):
         """
-        Получение координат точки из mongo.
+        Классификация poi по карте и выбор максимального reward в кластере.
 
         Args:
-            node(dict) - точка из mongo.
-            inverse(bool) - при False возвращается [lat, lon], иначе наоборот.
+            poi(list) - список id_osm из текущего тэга.
+            rewards(list) - награды для poi.
+            max_points(int) - минимальное количество элементов для отбора.
 
         Returns:
-            list - коорданаты точки.
+            list - точки интереса с максимальным reward.
         """
-        coord = node['location']['coordinates']
-        if inverse:
-            return coord
-        return [coord[1], coord[0]]
+        order = np.argsort(rewards * -1)
+        poi = list(np.array(poi)[order])
+        rewards = rewards[order]
+        add_point = (rewards[max_points:] == rewards[max_points - 1]).sum()
+        return poi[:max_points + add_point]
 
     @staticmethod
-    def _add_poi_rewards(graph_poi, points, category):
+    def _get_available_tags(graph, params):
         """
-        Добавление наград к точкам интереса.
+        Возвращает тэги достопримечательностей, которые есть в графе, помимо тех, что задал пользователь.
         Args:
-            points(list) - точки интереса из mongo.
-            category(str) - категория всех точек интереса.
+            graph(networkx.Graph): - граф.
+            params(StartingParams) - стартовые ограничения.
+
         Returns:
-            points(list) - точки интереса с аттрибутами `reward` (награда в каждой точке).
+            list - список тэгов.
         """
-
-        rewards = np.array([p['rate'] if 'rate' in p else np.nan for p in points])
-
-        if category != ATTRACTION_TAG:
-            centralities = np.array([graph_poi.nodes[p['id_osm']]['centrality'][category] for p in points])
-            rewards = np.array([centralities[i] if np.isnan(rewards[i]) else max(rewards[i], centralities[i])
-                                for i in range(len(points))])
-
-        if np.count_nonzero(~np.isnan(rewards)):
-            rewards[np.isnan(rewards)] = max(np.nanmean(rewards), AVERAGE_RATE)
-        else:
-            rewards[np.isnan(rewards)] = 1
-
-        rewards = (10 * rewards).astype(int)
-        rewards[rewards == 0] = 1
-        for i, node in enumerate(points):
-            node['reward'] = rewards[i]
-        return points
+        available_tags = []
+        for global_tag in attractions_tags:
+            poi_global_tag = list(nx.get_node_attributes(graph, global_tag).keys())
+            if len(poi_global_tag) > 0:
+                if global_tag in params.global_tags.items():
+                    tags = list(set([i for i in graph.nodes[point][global_tag] for point in poi_global_tag]))
+                    available_tags += tags
+                else:
+                    available_tags.append(global_tag)

@@ -1,4 +1,5 @@
 constraints_tags = ['finance', 'food', 'pharmacy', 'post', 'shop', 'telephone', 'wc']
+attractions_tags = ['entertainment', 'religion', 'tourism', 'architecture', 'historic']
 all_tags = {'finance': 'finance',
             'finance_bank': 'finance',
             'finance_atm': 'finance',
