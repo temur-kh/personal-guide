@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+import time
 import numpy as np
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
@@ -270,14 +271,17 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, need_ret
 
 
 class SolutionWithLimit(cp_model.CpSolverSolutionCallback):
-    def __init__(self, limit):
+    def __init__(self, limit, deadline_seconds):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.__solution_count = 0
         self.__solution_limit = limit
+        self.__deadline_sec = deadline_seconds
+        self.__time_run = time.time()
 
     def on_solution_callback(self):
         self.__solution_count += 1
-        if self.__solution_count >= self.__solution_limit:
+        if (time.time() - self.__time_run) > self.__deadline_sec \
+                or self.__solution_count >= self.__solution_limit:
             print('Stop search after %i solutions' % self.__solution_limit)
             self.StopSearch()
 
@@ -364,15 +368,14 @@ def reward_collecting_tsp(data, max_distance, stop_dists=None):
 
     # Solve and print out the solution.
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 20
+    solver.parameters.max_time_in_seconds = 120
     solver.parameters.log_search_progress = True
     # To benefit from the linearization of the circuit constraint.
     solver.parameters.linearization_level = 2
 
     # находит первое решение и возвращает его
-    solution_printer = SolutionWithLimit(1)
+    solution_printer = SolutionWithLimit(limit=10, deadline_seconds=8)
     solver.SolveWithSolutionCallback(model, solution_printer)
-    # solver.Solve(model)
 
     print(solver.ResponseStats())
 
