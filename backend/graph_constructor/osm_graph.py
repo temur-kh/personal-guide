@@ -140,5 +140,6 @@ class OsmGraph(Graph):
         """
         params = {'lng': self.data['locations'][point][1],
                   'lat': self.data['locations'][point][0],
-                  'category': self.data['category'][point]}
+                  'category': self.data['category'][point],
+                  'attributes': self.data['attributes'][point]}
         return params

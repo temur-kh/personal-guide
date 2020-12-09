@@ -21,6 +21,8 @@ class Service():
         speed = 66  # meters in minute
         start_params = {'start_lat': params.get('start_lat', type=float),
                         'start_lng': params.get('start_lng', type=float),
+                        'duration': time_for_route,
+                        'speed': speed,
                         'distance': time_for_route * speed,
                         'tags': tags + constraints}
         need_return = True if params.get('need_return') == 'true' else False

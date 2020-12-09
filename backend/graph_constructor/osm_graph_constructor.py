@@ -7,7 +7,7 @@ from graph_constructor.Error import not_found_city, not_found_poi
 from graph_constructor.osm_graph import OsmGraph
 from graph_constructor.graph_constructor import GraphConstructor
 from graph_constructor.starting_params import StartingParams
-from graph_constructor.tags import constraints_tags, attractions_tags
+from graph_constructor.tags import *
 from ml_module.clustering_model import ClusteringModel
 
 
@@ -119,7 +119,6 @@ class OsmGraphConstructor(GraphConstructor):
         Получение свойств poi, ближайших к стартовой точке.
 
         Args:
-            graph(networkx.Graph): - граф, в состав которого должны попадать найденные poi.
             params(StartingParams) - стартовые ограничения.
             max_points(int) - максимальное кол-во poi в одной категории constraint.
 
@@ -220,3 +219,84 @@ class OsmGraphConstructor(GraphConstructor):
                 else:
                     available_tags.append(global_tag)
         return available_tags
+
+    @staticmethod
+    def _get_start_point_attrs(params):
+        """
+        Получение аттрибутов точек интереса для возврата на фронтенд.
+        Args:
+            params(dict) - параметры с ограничениями для маршрута.
+        Returns:
+            attrs(dict) - аттрибуты для стартовой точки.
+        """
+
+        def printable_speed(speed):
+            return speed * 60 / 1000
+
+        time_for_route = params['duration']
+        speed = printable_speed(params['speed'])
+        title = 'Стартовая точка'
+        description = f"Продолжительность машрута: {time_for_route} минут.\n" + \
+                      f"Ориентировочная скорость пешехода: {speed:0.1f} км/ч."
+        attrs = {
+            'category_title': title,
+            'title': title,
+            'description': description
+        }
+        return attrs
+
+    @staticmethod
+    def _get_attributes(poi):
+        """
+        Получение аттрибутов точек интереса для возврата на фронтенд.
+        Args:
+            poi(list) - список найденных poi.
+        Returns:
+            attrs_list(list) - аттрибуты для каждой точки интереса.
+        """
+        points = poi['points']
+        categories = poi['category']
+        attrs_list = []
+        for i, point in enumerate(points):
+            # название категории на русском
+            category_title = CATEGORY_DEFAULT_TITLES.get(categories[i], WORST_CASE_TITLE)
+            for tag in sorted(point.get('global_tags', []), key=len, reverse=True):
+                if tag in CATEGORY_DEFAULT_TITLES:
+                    category_title = CATEGORY_DEFAULT_TITLES[tag]
+                    break
+
+            # название места
+            title = category_title
+            title = point.get('old_name', title)
+            title = point.get('name', title)
+            title = point.get('name_food', title)
+
+            # описание, если есть
+            description = point.get('description', None)
+
+            # словарь с ссылками на фотки, если есть (для ресторанов)
+            photo = point.get('photo', None)
+            if photo:
+                images = photo.get('images', None)
+            else:
+                images = None
+
+            # рейтинги ресторанов и достопримечательностей, если есть
+            food_rating = point.get('rating', None)
+            poi_rate = point.get('rate', None)
+
+            attrs = {
+                'category_title': category_title,
+                'title': title,
+            }
+            if description:
+                attrs['description'] = description
+            if images:
+                attrs['images'] = images
+            if food_rating:
+                attrs['food_rating'] = images
+            if poi_rate:
+                attrs['poi_rate'] = poi_rate
+
+            attrs_list.append(attrs)
+        return attrs_list
