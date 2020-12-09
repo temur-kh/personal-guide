@@ -2,6 +2,8 @@ import pickle
 import networkx as nx
 
 from graph_constructor.graph import Graph
+from graph_constructor.starting_params import StartingParams
+from graph_constructor.tags import CATEGORY_DEFAULT_TITLES, WORST_CASE_TITLE, START_POINT_TAG
 
 INF_DIST = 1_000_000
 
@@ -59,7 +61,7 @@ class OsmGraph(Graph):
         return points, line_string
 
     @staticmethod
-    def create(graph, way, poi):
+    def create(graph, way, poi, params: StartingParams):
         """
         Args:
             graph(networkx.Graph) - граф вокруг стратовой точки.
@@ -71,14 +73,12 @@ class OsmGraph(Graph):
                 category(list) - категория выбранных poi (порядок соответсвует points_id).
                 constraints(dict) - словарь constraints с индексами(в points):
                         {category_constraint: [], ...}
+            params(StartingParams) - стартовые ограничения.
         Returns:
 
         """
         dist_matrix = {nd['id_osm']: nd.get('dist_matrix') for nd in poi['points']}
-        points_info = {nd['id_osm']: {'dist_matrix': nd.get('dist_matrix'),
-                                      'description': nd.get('description'),
-                                      'photo': nd.get('photo'),
-                                      'name': nd.get('photo')} for nd in poi['points']}
+        attributes = OsmGraph._get_attributes(poi, params)
         nv = len(poi['points_id'])
         distance_matrix = [[]] * nv
         for i in range(nv):
@@ -99,10 +99,8 @@ class OsmGraph(Graph):
             'distance_matrix': distance_matrix,
             'rewards': reward,
             'stop_time': stop_time,
-            'attributes': poi['attributes'],
-            'info': [points_info[nd] for nd in poi['points_id']]
+            'attributes': [attributes[nd] for nd in poi['points_id']]
         }
-        print(list(zip(poi['category'], [p['category_title'] for p in poi['attributes']])), flush=True)
         return OsmGraph(graph, way, data)
 
     def save(self, file_name):
@@ -145,3 +143,69 @@ class OsmGraph(Graph):
                   'category': self.data['category'][point],
                   'attributes': self.data['attributes'][point]}
         return params
+
+    @staticmethod
+    def _get_attributes(poi, params: StartingParams):
+        """
+        Получение аттрибутов точек интереса для возврата на фронтенд.
+        Args:
+            poi(list) - список найденных poi.
+            params(StartingParams) - стартовые ограничения.
+        Returns:
+            attrs_list(list) - аттрибуты для каждой точки интереса.
+        """
+        points = poi['points']
+        categories = poi['category']
+        attrs_dict = dict()
+        for i, point in enumerate(points):
+            if categories[i] == START_POINT_TAG:
+                attrs_dict[point['id_osm']] = params.get_start_point_attrs()
+                continue
+
+            # название категории на русском
+            category_title = CATEGORY_DEFAULT_TITLES.get(categories[i], WORST_CASE_TITLE)
+            for tag in sorted(point.get('global_tags', []), key=len, reverse=True):
+                if tag in CATEGORY_DEFAULT_TITLES:
+                    category_title = CATEGORY_DEFAULT_TITLES[tag]
+                    break
+
+            # название места
+            title = category_title
+            title = point.get('old_name', title)
+            title = point.get('name', title)
+            title = point.get('name_food', title)
+
+            # описание, если есть
+            description = point.get('description', None)
+
+            # словарь с ссылками на фотки, если есть (для ресторанов)
+            photo = point.get('photo', None)
+
+            poi_photo, food_images = None, None
+            if photo:
+                if isinstance(photo, str):
+                    poi_photo = photo
+                else:
+                    food_images = photo.get('images', None)
+
+            # рейтинги ресторанов и достопримечательностей, если есть
+            food_rating = point.get('rating', None)
+            poi_rate = point.get('rate', None)
+
+            attrs = {
+                'category_title': category_title,
+                'title': title,
+            }
+            if description:
+                attrs['description'] = description
+            if poi_photo:
+                attrs['poi_photo'] = poi_photo
+            if food_images:
+                attrs['food_images'] = food_images
+            if food_rating:
+                attrs['food_rating'] = food_rating
+            if poi_rate:
+                attrs['poi_rate'] = poi_rate
+
+            attrs_dict[point['id_osm']] = attrs
+        return attrs_dict

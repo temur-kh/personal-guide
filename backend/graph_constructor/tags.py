@@ -61,6 +61,7 @@ all_tags = {
     'historic_archaeological': 'historic',
     'historic_memorial': 'historic'}
 
+START_POINT_TAG = 'start_point'
 ATTRACTION_TAG = 'attraction'
 
 CATEGORY_DEFAULT_TITLES = {

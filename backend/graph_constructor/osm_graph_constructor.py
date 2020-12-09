@@ -77,7 +77,7 @@ class OsmGraphConstructor(GraphConstructor):
             poi = self._get_poi(graph, params, max_points)
             if len(poi['points']) == 1:
                 return not_found_poi(self._get_available_tags(graph, params))
-            osm_graph = OsmGraph.create(graph, path, poi)
+            osm_graph = OsmGraph.create(graph, path, poi, params)
             if self.cache:
                 osm_graph.save(fnam)
             return osm_graph
@@ -148,12 +148,10 @@ class OsmGraphConstructor(GraphConstructor):
             poi['category'] += [global_tag] * len(poi_tag)
             poi['points_id'] += poi_tag
         poi['points'] = self._find_poi(params, poi['points_id'])
-        poi['attributes'] = self._get_attributes(poi)
         # добавление данных стартовой точки
         poi['points'].append(params.start_point)
         poi['points_id'].append(params.get_start_id())
-        poi['category'].append('start_point')
-        poi['attributes'].append(params.get_start_point_attrs())
+        poi['category'].append(START_POINT_TAG)
         return poi
 
     @staticmethod
@@ -223,64 +221,3 @@ class OsmGraphConstructor(GraphConstructor):
                 else:
                     available_tags.append(global_tag)
         return available_tags
-
-    @staticmethod
-    def _get_attributes(poi):
-        """
-        Получение аттрибутов точек интереса для возврата на фронтенд.
-        Args:
-            poi(list) - список найденных poi.
-        Returns:
-            attrs_list(list) - аттрибуты для каждой точки интереса.
-        """
-        points = poi['points']
-        categories = poi['category']
-        attrs_list = []
-        for i, point in enumerate(points):
-            # название категории на русском
-            category_title = CATEGORY_DEFAULT_TITLES.get(categories[i], WORST_CASE_TITLE)
-            for tag in sorted(point.get('global_tags', []), key=len, reverse=True):
-                if tag in CATEGORY_DEFAULT_TITLES:
-                    category_title = CATEGORY_DEFAULT_TITLES[tag]
-                    break
-
-            # название места
-            title = category_title
-            title = point.get('old_name', title)
-            title = point.get('name', title)
-            title = point.get('name_food', title)
-
-            # описание, если есть
-            description = point.get('description', None)
-
-            # словарь с ссылками на фотки, если есть (для ресторанов)
-            photo = point.get('photo', None)
-
-            poi_photo, food_images = None, None
-            if photo:
-                if isinstance(photo, str):
-                    poi_photo = photo
-                else:
-                    food_images = photo.get('images', None)
-
-            # рейтинги ресторанов и достопримечательностей, если есть
-            food_rating = point.get('rating', None)
-            poi_rate = point.get('rate', None)
-
-            attrs = {
-                'category_title': category_title,
-                'title': title,
-            }
-            if description:
-                attrs['description'] = description
-            if poi_photo:
-                attrs['poi_photo'] = poi_photo
-            if food_images:
-                attrs['food_images'] = food_images
-            if food_rating:
-                attrs['food_rating'] = food_rating
-            if poi_rate:
-                attrs['poi_rate'] = poi_rate
-
-            attrs_list.append(attrs)
-        return attrs_list
