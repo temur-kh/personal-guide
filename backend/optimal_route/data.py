@@ -47,6 +47,10 @@ def extract_data(data, cluster, starting_point):
                     'rewards': [] * nvc, 'constraints': {}}
 
     # TODO надо как-то разбивку contraints добавить, чтобы индексы не помешались и лишние индексы не включились
+    for constraint, idxs in data['constraints'].items():
+        new_idxs = [i for i in idxs if i in sorted_cluster]
+        if len(new_idxs) > 0:
+            cluster_data['constraints'].update({constraint: new_idxs})
 
     for i in range(nvc):
         cluster_data['distance_matrix'][i] = [data['distance_matrix'][sorted_cluster[i]][j] for j in sorted_cluster]

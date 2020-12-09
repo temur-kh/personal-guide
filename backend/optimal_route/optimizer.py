@@ -115,7 +115,7 @@ class Optimizer:
                 all_route.append(cluster[r])
                 print(cluster[r], flush=True)
 
-            all_route_dist += route_distance
+            all_route_dist += int(route_distance)
             starting_point = all_route[-1]
             if all_route_dist >= walking_dist:
                 break
@@ -131,14 +131,12 @@ class Optimizer:
 
     def solve_parallel(self, data, clusters, time_for_route, need_return=False):
         n_processes = 2  # multi.cpu_count()
-        # TODO дебаг, чтобы логи процесса отображались.
-        #  Раскомментить код снизу и удалить последнюю строчку с results
         pool = multi.Pool(n_processes)
         results = [
             pool.apply_async(self.solve_worker, args=(id, n_processes, data, clusters, time_for_route, need_return))
             for id in range(n_processes)]
         #results = [self.solve_worker(1, n_processes, data, clusters, time_for_route, need_return)]
         routes = [p.get() for p in results]
-        # pool.close()
+        pool.close()
 
         return routes
