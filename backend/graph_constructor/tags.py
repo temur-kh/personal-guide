@@ -1,4 +1,5 @@
 constraints_tags = ['finance', 'food', 'pharmacy', 'post', 'shop', 'telephone', 'wc']
+attractions_tags = ['entertainment', 'religion', 'tourism', 'architecture', 'historic']
 all_tags = {
     'finance': 'finance',
     'finance_bank': 'finance',
@@ -60,6 +61,7 @@ all_tags = {
     'historic_archaeological': 'historic',
     'historic_memorial': 'historic'}
 
+START_POINT_TAG = 'start_point'
 ATTRACTION_TAG = 'attraction'
 
 CATEGORY_DEFAULT_TITLES = {
