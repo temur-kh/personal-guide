@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+import time
 import numpy as np
 from ortools.constraint_solver import pywrapcp
 from ortools.constraint_solver import routing_enums_pb2
@@ -270,14 +271,17 @@ def find_route_with_distance_limit(data, distance_matrix, max_distance, need_ret
 
 
 class SolutionWithLimit(cp_model.CpSolverSolutionCallback):
-    def __init__(self, limit):
+    def __init__(self, limit, deadline_seconds):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.__solution_count = 0
         self.__solution_limit = limit
+        self.__deadline_sec = deadline_seconds
+        self.__time_run = time.time()
 
     def on_solution_callback(self):
         self.__solution_count += 1
-        if self.__solution_count >= self.__solution_limit:
+        if (time.time() - self.__time_run) > self.__deadline_sec \
+                or self.__solution_count >= self.__solution_limit:
             print('Stop search after %i solutions' % self.__solution_limit)
             self.StopSearch()
 
@@ -285,7 +289,7 @@ class SolutionWithLimit(cp_model.CpSolverSolutionCallback):
         return self.__solution_count
 
 
-def reward_collecting_tsp(data, max_distance):
+def reward_collecting_tsp(data, max_distance, stop_dists=None):
     """
     data(dict) - информациея о poi. Ключи:
                 ids(list) - список id_osm.
@@ -298,23 +302,26 @@ def reward_collecting_tsp(data, max_distance):
                         {category_constraint: [], ...}
                 distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
                 rewards(list) - список наград для точек интереса.
+                stop_time(list) - список врмени остановки на poi.
     """
     print("Total number of points:", len(data['rewards']), flush=True)
     print("All rewards:", data['rewards'], flush=True)
+
     num_nodes = data['nv']
+    visit_rewards = data['rewards']
+    distance_matrix = data['distance_matrix']
+
     all_nodes = range(num_nodes)
     model = cp_model.CpModel()
+
     obj_vars = []
     obj_coeffs = []
     lits = []
     dists = []
-
+    stops = []
     route = []
-
     visited_nodes = []
     arc_literals = {}
-    visit_rewards = data['rewards']
-    distance_matrix = data['distance_matrix']
 
     # Create the circuit constraint.
     arcs = []
@@ -337,6 +344,8 @@ def reward_collecting_tsp(data, max_distance):
 
             lits.append(lit)
             dists.append(int(distance_matrix[i][j]))
+            if stop_dists:
+                stops.append(stop_dists[j])
 
     model.AddCircuit(arcs)
 
@@ -348,7 +357,10 @@ def reward_collecting_tsp(data, max_distance):
 
     # The maximal distance of a route should not exceed max_distance
 
-    model.Add(sum(lits[i] * dists[i] for i in range(len(lits))) <= max_distance)
+    if stop_dists:
+        model.Add(sum(lits[i] * (dists[i] + stops[i]) for i in range(len(lits))) <= max_distance)
+    else:
+        model.Add(sum(lits[i] * dists[i] for i in range(len(lits))) <= max_distance)
 
     # Maximize reward from visited nodes.
     model.Maximize(
@@ -356,17 +368,16 @@ def reward_collecting_tsp(data, max_distance):
 
     # Solve and print out the solution.
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 20
+    solver.parameters.max_time_in_seconds = 120
     solver.parameters.log_search_progress = True
     # To benefit from the linearization of the circuit constraint.
     solver.parameters.linearization_level = 2
 
     # находит первое решение и возвращает его
-    solution_printer = SolutionWithLimit(1)
+    solution_printer = SolutionWithLimit(limit=10, deadline_seconds=8)
     solverStatus = solver.SolveWithSolutionCallback(model, solution_printer)
     if solverStatus == 3: #INFEASIBLE
         return [], 0
-    print(f'solverStatus = {solverStatus}')
     # solver.Solve(model)
 
     print(solver.ResponseStats())

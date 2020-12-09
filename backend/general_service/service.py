@@ -1,10 +1,6 @@
 import time
-
 from ml_module.clustering_model import ClusteringModel
 from optimal_route.optimizer import Optimizer
-
-from utils.configuration import service, TRIP_TYPES_MAPPING
-
 
 class Service():
     def __init__(self, constructor):
@@ -22,18 +18,21 @@ class Service():
 
         """
         time_for_route = params.get('duration', type=int)  # minutes
+        tags = params.get('tags').split(',')
+        constraints = params.get('constraints').split(',')
         speed = 66  # meters in minute
         need_return = params.get('need_return', default=False)
 
         start_params = {'start_lat': params.get('start_lat', type=float),
                         'start_lng': params.get('start_lng', type=float),
+                        'duration': time_for_route,
+                        'speed': speed,
                         'distance': time_for_route * speed,
-                        'tags': ['historic', 'food', 'pharmacy']}
+                        'tags': tags + constraints}
+        need_return = True if params.get('need_return') == 'true' else False
         max_points = int(25 * time_for_route / 60)
         print("Max points:", max_points, flush=True)
         # TODO считывать trip_type и дополнительные типы точек типа аптек и ресторанов
-        # trip_type = params.get('trip_type', type=str)
-        # start_params['tags'] = service[TRIP_TYPES_MAPPING][trip_type]
 
         # osm_data_processor = OSMDataProcessor()
         # query_result = osm_data_processor.get_nearest_points(
