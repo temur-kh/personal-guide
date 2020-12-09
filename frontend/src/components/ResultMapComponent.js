@@ -6,11 +6,59 @@ import Polyline from 'react-leaflet-arrowheads'
 import {Icon} from 'leaflet'
 import "../css/ResultMapComponent.css"
 
-const foodIcon = new Icon({
-    iconUrl: "/custom_icons/food.png",
-    iconSize: [40, 40],
-    iconAnchor: [20, 40]
-});
+function getIcon(iconType) {
+    let iconUrl = "/custom_icons/";
+    switch(iconType) {
+        case 'food':
+            iconUrl += "restaurant.png";
+            break;
+        case 'post':
+            iconUrl += "post.png";
+            break;
+        case 'finance':
+            iconUrl += "atm.png";
+            break;
+        case 'shop':
+            iconUrl += "shop.png";
+            break;
+        case 'wc':
+            iconUrl += "toilet.png";
+            break;
+        case 'telephone':
+            iconUrl += "phone.png";
+            break;
+        case 'pharmacy':
+            iconUrl += "hospital.png";
+            break;
+
+        case 'religion':
+            iconUrl += "church.png";
+            break;
+        case 'entertainment':
+            iconUrl += "museum.png";
+            break;
+        case 'historic':
+            iconUrl += "castle.png";
+            break;
+        case 'architecture':
+            iconUrl += "arch.png";
+            break;
+        case 'tourism':
+            iconUrl += "obelisk.png";
+            break;
+        case 'start_point':
+            iconUrl += "start.png";
+            break;
+        default:
+            iconUrl += "default.png";
+            break;
+    }
+    return new Icon({
+        iconUrl: iconUrl,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
+    });
+}
 
 export default class ResultMapComponent extends Component<{}> {
     mapRef = createRef<Map>()
@@ -20,7 +68,7 @@ export default class ResultMapComponent extends Component<{}> {
             this.props.pathData.points.map(point => (
                 <Marker
                     position={[point.lat, point.lng]}
-                    icon={foodIcon}
+                    icon={getIcon(point.category)}
                 />
             ))
         );

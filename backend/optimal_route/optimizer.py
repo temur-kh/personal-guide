@@ -59,10 +59,12 @@ class Optimizer:
                         {category_constraint: [], ...}
                 distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
                 rewards(list) - список наград для точек интереса.
+                stop_time(list) - список врмени остановки на poi.
             time_for_route - время на маршрут
             need_return = bool, нужно ли возвращаться в стартовую точку
         """
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
+        stop_dists = [self.estimate_walking_distance_from_time(stime) for stime in data['stop_time']]
 
         if not need_return:
             correct_distance_matrix_no_return(data)
@@ -74,7 +76,7 @@ class Optimizer:
             route = rt.find_route_with_distance_limit(data, distance_matrix, walking_dist,
                                                       need_return, hard=True)
         else:
-            route, route_distance = rt.reward_collecting_tsp(data, walking_dist)
+            route, route_distance = rt.reward_collecting_tsp(data, walking_dist, stop_dists)
         end = time.time()
         print('OR calculation time is {}'.format(end - start), flush=True)
         if not need_return and len(route) > 1:
@@ -85,10 +87,18 @@ class Optimizer:
     def solve_clusters(self, data, clusters, time_for_route, need_return=False):
 
         """
-            data - словарь с ключами:
-                distance_matrix - матрица расстояний между всеми точками
-                depot - индекс стартовой вершины
-                nv - число вершин
+            data(dict) - информациея о poi. Ключи:
+                ids(list) - список id_osm.
+                category(list) - список категорий poi.
+                locations(list) - список координат poi в формате: [lat, lon].
+                nv(int) - кол-во poi.
+                num_vehicles(int)
+                depot(int) - индекс(в ids) стартовой точки.
+                constraints(dict) - словарь constraints с индексами(в ids):
+                        {category_constraint: [], ...}
+                distance_matrix(list) - матрица кратчайших расстояний(int), размером (nv, nv)
+                rewards(list) - список наград для точек интереса.
+                stop_time(list) - список врмени остановки на poi.
             clusters - списки с индексами вершин
             time_for_route - время на маршрут
             need_return = bool, нужно ли возвращаться в стартовую точку
