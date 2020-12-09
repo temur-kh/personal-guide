@@ -213,8 +213,10 @@ class OsmGraphConstructor(GraphConstructor):
         for global_tag in attractions_tags:
             poi_global_tag = list(nx.get_node_attributes(graph, global_tag).keys())
             if len(poi_global_tag) > 0:
-                if global_tag in params.global_tags.items():
-                    tags = list(set([i for i in graph.nodes[point][global_tag] for point in poi_global_tag]))
+                if global_tag in params.global_tags.keys():
+                    tags = list(set([i for point in poi_global_tag
+                                     for i in graph.nodes[point][global_tag] if i != global_tag]))
                     available_tags += tags
                 else:
                     available_tags.append(global_tag)
+        return available_tags
