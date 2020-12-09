@@ -331,11 +331,15 @@ class OsmGraphConstructor(GraphConstructor):
         Returns:
             attrs(dict) - аттрибуты для стартовой точки.
         """
+
+        def printable_speed(speed):
+            return speed * 60 / 1000
+
         time_for_route = params['duration']
-        speed = params['speed']
+        speed = printable_speed(params['speed'])
         title = 'Стартовая точка'
-        description = f"Максимальная продолжительность машрута: {time_for_route} минут.\n" + \
-                      f"Ориентировочная скорость пешехода: {speed} метров в минуту."
+        description = f"Продолжительность машрута: {time_for_route} минут.\n" + \
+                      f"Ориентировочная скорость пешехода: {speed:0.1f} км/ч."
         attrs = {
             'category_title': title,
             'title': title,
