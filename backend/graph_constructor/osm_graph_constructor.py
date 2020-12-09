@@ -114,7 +114,7 @@ class OsmGraphConstructor(GraphConstructor):
         query = {'city': params.get_city(), 'id_osm': {'$in': points}}
         return self.data_processor.select_query('poi', query)
 
-    def _get_poi(self, graph, params, max_points):
+    def _get_poi(self, graph, params: StartingParams, max_points):
         """
         Получение свойств poi, ближайших к стартовой точке.
 
@@ -147,9 +147,13 @@ class OsmGraphConstructor(GraphConstructor):
                     poi_tag = self._best_attraction(poi_tag, rewards, max_points)
             poi['category'] += [global_tag] * len(poi_tag)
             poi['points_id'] += poi_tag
-        poi['points'] = self._find_poi(params, poi['points_id']) + [params.start_point]
+        poi['points'] = self._find_poi(params, poi['points_id'])
+        poi['attributes'] = self._get_attributes(poi)
+        # добавление данных стартовой точки
+        poi['points'].append(params.start_point)
         poi['points_id'].append(params.get_start_id())
         poi['category'].append('start_point')
+        poi['attributes'].append(params.get_start_point_attrs())
         return poi
 
     @staticmethod
@@ -221,31 +225,6 @@ class OsmGraphConstructor(GraphConstructor):
         return available_tags
 
     @staticmethod
-    def _get_start_point_attrs(params):
-        """
-        Получение аттрибутов точек интереса для возврата на фронтенд.
-        Args:
-            params(dict) - параметры с ограничениями для маршрута.
-        Returns:
-            attrs(dict) - аттрибуты для стартовой точки.
-        """
-
-        def printable_speed(speed):
-            return speed * 60 / 1000
-
-        time_for_route = params['duration']
-        speed = printable_speed(params['speed'])
-        title = 'Стартовая точка'
-        description = f"Продолжительность машрута: {time_for_route} минут.\n" + \
-                      f"Ориентировочная скорость пешехода: {speed:0.1f} км/ч."
-        attrs = {
-            'category_title': title,
-            'title': title,
-            'description': description
-        }
-        return attrs
-
-    @staticmethod
     def _get_attributes(poi):
         """
         Получение аттрибутов точек интереса для возврата на фронтенд.
@@ -276,10 +255,13 @@ class OsmGraphConstructor(GraphConstructor):
 
             # словарь с ссылками на фотки, если есть (для ресторанов)
             photo = point.get('photo', None)
+
+            poi_photo, food_images = None, None
             if photo:
-                images = photo.get('images', None)
-            else:
-                images = None
+                if isinstance(photo, str):
+                    poi_photo = photo
+                else:
+                    food_images = photo.get('images', None)
 
             # рейтинги ресторанов и достопримечательностей, если есть
             food_rating = point.get('rating', None)
@@ -291,10 +273,12 @@ class OsmGraphConstructor(GraphConstructor):
             }
             if description:
                 attrs['description'] = description
-            if images:
-                attrs['images'] = images
+            if poi_photo:
+                attrs['poi_photo'] = poi_photo
+            if food_images:
+                attrs['food_images'] = food_images
             if food_rating:
-                attrs['food_rating'] = images
+                attrs['food_rating'] = food_rating
             if poi_rate:
                 attrs['poi_rate'] = poi_rate
 

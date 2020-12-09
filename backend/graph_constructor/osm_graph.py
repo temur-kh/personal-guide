@@ -99,8 +99,10 @@ class OsmGraph(Graph):
             'distance_matrix': distance_matrix,
             'rewards': reward,
             'stop_time': stop_time,
+            'attributes': poi['attributes'],
             'info': [points_info[nd] for nd in poi['points_id']]
         }
+        print(list(zip(poi['category'], [p['category_title'] for p in poi['attributes']])), flush=True)
         return OsmGraph(graph, way, data)
 
     def save(self, file_name):

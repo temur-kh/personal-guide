@@ -8,6 +8,8 @@ class StartingParams:
         self.start_coordinates = [lon, lat]
         self.distance = params.get('distance')
         self.tags = params.get('tags')
+        self.time_for_route = params.get('duration')
+        self.speed = params.get('speed')
 
         self.global_tags = self._set_global_tags()
         self.start_point = {}
@@ -35,3 +37,27 @@ class StartingParams:
     def get_start_point_coord(self):
         coord = self.start_point['location']['coordinates']
         return [coord[1], coord[0]]
+
+    def get_start_point_attrs(self):
+        """
+        Получение аттрибутов точек интереса для возврата на фронтенд.
+        Args:
+            params(dict) - параметры с ограничениями для маршрута.
+        Returns:
+            attrs(dict) - аттрибуты для стартовой точки.
+        """
+
+        def printable_speed(speed):
+            return speed * 60 / 1000
+
+        speed = printable_speed(self.speed)
+
+        title = 'Стартовая точка'
+        description = f"Продолжительность машрута: {self.time_for_route} минут.\n" + \
+                      f"Ориентировочная скорость пешехода: {speed:0.1f} км/ч."
+        attrs = {
+            'category_title': title,
+            'title': title,
+            'description': description
+        }
+        return attrs
