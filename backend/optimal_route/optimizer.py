@@ -104,6 +104,7 @@ class Optimizer:
             need_return = bool, нужно ли возвращаться в стартовую точку
         """
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
+        stop_dists = [self.estimate_walking_distance_from_time(stime) for stime in data['stop_time']]
         all_route_dist = 0
         all_route = []
         starting_point = data['depot']
@@ -112,7 +113,7 @@ class Optimizer:
             if not need_return:
                 correct_distance_matrix_no_return(cluster_data)
             route, route_distance = rt.reward_collecting_tsp(cluster_data,
-                                                             walking_dist - all_route_dist)
+                                                             walking_dist - all_route_dist, stop_dists)
             if len(route) == 0:
                 return all_route
 
@@ -133,19 +134,45 @@ class Optimizer:
         print(f'total distance = {all_route_dist}', flush=True)
         return all_route
 
+    def solve_cluster(self, data, cluster, time_for_route, need_return=False):
+
+        """
+            cluster - список с индексами вершин
+        """
+        walking_dist = self.estimate_walking_distance_from_time(time_for_route)
+        stop_dists = [self.estimate_walking_distance_from_time(stime) for stime in data['stop_time']]
+        starting_point = data['depot']
+        cluster_data = dt.extract_data(data, cluster, starting_point)
+        if not need_return:
+            correct_distance_matrix_no_return(cluster_data)
+        route, route_distance = rt.reward_collecting_tsp(cluster_data, walking_dist, stop_dists)
+
+        if not need_return and len(route) > 1:
+            route.pop()
+
+        all_route = []
+        for r in route:
+            all_route.append(cluster[r])
+
+        return all_route
+
     def solve_worker(self, id, n_processes, data, clusters, time_for_route, need_return):
         if id == 0:
             return self.solve(data, time_for_route, need_return)
         else:
-            return self.solve_clusters(data, clusters, time_for_route, need_return)
+            return self.solve_cluster(data, clusters[id - 1], time_for_route, need_return)
+            # return self.solve_clusters(data, clusters, time_for_route, need_return)
 
     def solve_parallel(self, data, clusters, time_for_route, need_return=False):
-        n_processes = 2  # multi.cpu_count()
+        n_clusters = len(clusters) if clusters else 0
+        n_processes = 1  # multi.cpu_count()
+        if n_clusters > 1:
+            n_processes += n_clusters
         pool = multi.Pool(n_processes)
         results = [
             pool.apply_async(self.solve_worker, args=(id, n_processes, data, clusters, time_for_route, need_return))
             for id in range(n_processes)]
-        #results = [self.solve_worker(1, n_processes, data, clusters, time_for_route, need_return)]
+        # results = [self.solve_worker(1, n_processes, data, clusters, time_for_route, need_return)]
         routes = [p.get() for p in results]
         pool.close()
 

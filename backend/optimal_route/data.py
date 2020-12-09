@@ -24,6 +24,7 @@ def create_data_model_distance():
     data['depot'] = 0
     data['nv'] = 13
     data['rewards'] = [1 for i in range(data['nv'])]
+    data['stop_time'] = [1 for i in range(data['nv'])]
     data['constraints'] = {}
     return data
 
@@ -56,6 +57,7 @@ def extract_data(data, cluster, starting_point):
         cluster_data['distance_matrix'][i] = [data['distance_matrix'][sorted_cluster[i]][j] for j in sorted_cluster]
 
     cluster_data['rewards'] = [data['rewards'][sorted_cluster[i]] for i in range(nvc)]
+    cluster_data['stop_time'] = [data['stop_time'][sorted_cluster[i]] for i in range(nvc)]
 
     return cluster_data
 
