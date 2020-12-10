@@ -104,16 +104,17 @@ class Optimizer:
             need_return = bool, нужно ли возвращаться в стартовую точку
         """
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
-        stop_dists = [self.estimate_walking_distance_from_time(stime) for stime in data['stop_time']]
         all_route_dist = 0
         all_route = []
         starting_point = data['depot']
         for cluster in clusters:
             cluster_data = dt.extract_data(data, cluster, starting_point)
+            stop_dists = [self.estimate_walking_distance_from_time(stime) for stime in cluster_data['stop_time']]
             if not need_return:
                 correct_distance_matrix_no_return(cluster_data)
             route, route_distance = rt.reward_collecting_tsp(cluster_data,
-                                                             walking_dist - all_route_dist, stop_dists)
+                                                             walking_dist - all_route_dist,
+                                                             stop_dists)
             if len(route) == 0:
                 return all_route
 
@@ -158,6 +159,8 @@ class Optimizer:
 
     def solve_worker(self, id, n_processes, data, clusters, time_for_route, need_return):
         if id == 0:
+            if data['nv'] > 100:
+                return []
             return self.solve(data, time_for_route, need_return)
         else:
             return self.solve_cluster(data, clusters[id - 1], time_for_route, need_return)
@@ -174,6 +177,7 @@ class Optimizer:
             for id in range(n_processes)]
         # results = [self.solve_worker(1, n_processes, data, clusters, time_for_route, need_return)]
         routes = [p.get() for p in results]
+        routes = [route for route in routes if len(route) > 0]
         pool.close()
 
         return routes
