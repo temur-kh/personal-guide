@@ -13,8 +13,8 @@ type State = {
 
 const mapRef = createRef<Map>();
 let startLatLng = {
-    lat: 52.5149111,
-    lng: 13.3910441
+    lat: 52.5120716,
+    lng: 13.3864754
 }
 
 export function changeView(center) {

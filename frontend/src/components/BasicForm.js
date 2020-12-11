@@ -32,8 +32,8 @@ export default function BasicForm() {
     const [city, setCity] = useState("berlin")
     const [firstLoad, setFirstLoad] = useState(true)
     const [startLatLng, setStartLatLng] = useState({
-        lat: 52.5149111,
-        lng: 13.3910441
+        lat: 52.5120716,
+        lng: 13.3864754
     })
     const [duration, setDuration] = useState(120)
     const [tripType, setTripType] = useState("historic")
@@ -188,6 +188,7 @@ export default function BasicForm() {
                 setLoadingStatus("success");
                 history.push({
                     pathname: "/result",
+                    start: startLatLng,
                     response: response.data
                 });
             })

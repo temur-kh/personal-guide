@@ -51,3 +51,8 @@
     color: #ffffff;
     text-align: center;
 }
+
+.popup-text {
+    text-align: justify;
+    text-indent: 5%;
+}

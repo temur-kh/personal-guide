@@ -23,6 +23,32 @@ export const useStyles = makeStyles((_) => ({
     submitForm: {
         maxWidth: '30%',
         flexBasis: '30%'
+    },
+    routeButton: {
+        cursor: 'pointer',
+        borderBottomWidth: '1px',
+        borderBottomStyle: 'solid',
+        borderBottomColor: '#858585',
+        borderTopWidth: '1px',
+        borderTopStyle: 'solid',
+        borderTopColor: '#858585',
+        paddingTop: '20px',
+        paddingBottom: '20px'
+    },
+    routeEmpty: {
+        textIndent: '10px',
+        textAlign: 'justify',
+        borderBottomWidth: '1px',
+        borderBottomStyle: 'solid',
+        borderBottomColor: '#858585',
+        borderTopWidth: '1px',
+        borderTopStyle: 'solid',
+        borderTopColor: '#858585',
+        paddingTop: '20px',
+        paddingBottom: '20px'
+    },
+    resultMap: {
+        paddingLeft: '40px'
     }
 }));
 
@@ -115,8 +141,8 @@ export const durationMarks = [
 
 export const cityCenters = {
     "berlin": {
-        lat: 52.5149111,
-        lng: 13.3910441
+        lat: 52.5120716,
+        lng: 13.3864754
     },
     "kaliningrad": {
         lat: 54.7105,
