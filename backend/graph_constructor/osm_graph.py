@@ -82,8 +82,9 @@ class OsmGraph(Graph):
         nv = len(poi['points_id'])
         distance_matrix = [[]] * nv
         for i in range(nv):
-            length = dist_matrix[poi['points_id'][i]]
-            distance_matrix[i] = [length.get(nd, INF_DIST) for nd in poi['points_id']]
+            cur_nd = poi['points_id'][i]
+            length = dist_matrix[cur_nd]
+            distance_matrix[i] = [length.get(nd, dist_matrix[nd].get(cur_nd, INF_DIST)) for nd in poi['points_id']]
         stop_time = [graph.nodes[nd].get('stop_time', {}).get(category, 0)
                      for nd, category in zip(poi['points_id'], poi['category'])]
         reward = [graph.nodes[nd].get('reward', {}).get(category, 0)
