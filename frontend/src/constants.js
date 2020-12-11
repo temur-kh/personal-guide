@@ -112,3 +112,18 @@ export const durationMarks = [
         label: '6 часов',
     }
 ];
+
+export const cityCenters = {
+    "berlin": {
+        lat: 52.5149111,
+        lng: 13.3910441
+    },
+    "kaliningrad": {
+        lat: 54.7105,
+        lng: 20.5145
+    },
+    "saint-petersburg": {
+        lat: 59.9423,
+        lng: 30.3297
+    }
+};

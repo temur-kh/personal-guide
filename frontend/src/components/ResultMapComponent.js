@@ -1,7 +1,7 @@
 // @flow
 
 import React, {Component, createRef} from 'react'
-import {Map, Marker, TileLayer} from 'react-leaflet'
+import {Map, Marker, Popup, TileLayer} from 'react-leaflet'
 import Polyline from 'react-leaflet-arrowheads'
 import {Icon} from 'leaflet'
 import "../css/ResultMapComponent.css"
@@ -62,14 +62,45 @@ function getIcon(iconType) {
 
 export default class ResultMapComponent extends Component<{}> {
     mapRef = createRef<Map>()
+    popupRef = Array.from({length: this.props.pathData.points.length}, a => createRef<Popup>());
 
     render() {
         const markers = (
-            this.props.pathData.points.map(point => (
+            this.props.pathData.points.map((point,i) => (
                 <Marker
                     position={[point.lat, point.lng]}
                     icon={getIcon(point.category)}
-                />
+                >
+                    <Popup maxHeight={350} keepInView={true} ref={this.popupRef[i]}>
+                        <div>
+                            <h2 className="popup-title">
+                                {point.attributes.title !== undefined
+                                    ? point.attributes.title
+                                    : point.attributes.category_title}
+                            </h2>
+                            {point.attributes.food_rating !== undefined &&
+                            <h3>Рейтинг: {point.attributes.food_rating}</h3>
+                            }
+                            {point.attributes.description !== undefined &&
+                            <p style={{textAlign: "justify"}}>
+                                {point.attributes.description.replace(/<(?:.|\n)*?>/gm, '')}
+                            </p>
+                            }
+                            {point.attributes.poi_photo !== undefined &&
+                            <img className="popup-photo"
+                                 src={point.attributes.poi_photo}
+                                 alt="POI photo"
+                                 onLoad={() => this.popupRef[i].current.leafletElement.update()}
+                            />
+                            }
+                            {point.attributes.food_images !== undefined &&
+                            point.attributes.food_images.medium !== undefined &&
+                            point.attributes.food_images.medium.url !== undefined &&
+                            <img className="popup-photo" src={point.attributes.food_images.medium.url} alt="Food photo"/>
+                            }
+                        </div>
+                    </Popup>
+                </Marker>
             ))
         );
 

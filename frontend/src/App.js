@@ -10,8 +10,20 @@ import {makeStyles} from "@material-ui/core/styles";
 
 const useStyles = makeStyles((_) => ({
     root: {
-        backgroundColor: "#eaeaea",
-        height: "100vh"
+        backgroundColor: "#eaeaea"
+    },
+    title: {
+        marginLeft: "15px"
+    },
+    logo: {
+        maxHeight: "100%",
+        maxWidth: "100%"
+    },
+    toolbar: {
+        height: "64px",
+        paddingTop: "5px",
+        paddingBottom: "5px",
+        borderRadius: "8px"
     }
 }));
 
@@ -20,9 +32,10 @@ function App() {
     return (
         <Container maxWidth="false" className={classes.root}>
             <AppBar position="static">
-                <Toolbar>
+                <Toolbar className={classes.toolbar}>
+                    <img src="logo_title.png" alt="logo" className={classes.logo} />
                     <Typography variant="h6" className={classes.title}>
-                        Персональный гид
+                        WalkCreator
                     </Typography>
                 </Toolbar>
             </AppBar>

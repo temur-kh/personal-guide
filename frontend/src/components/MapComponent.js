@@ -11,20 +11,29 @@ type State = {
     },
 }
 
+const mapRef = createRef<Map>();
+let startLatLng = {
+    lat: 52.5149111,
+    lng: 13.3910441
+}
+
+export function changeView(center) {
+    const {current = {}} = mapRef;
+    const {leafletElement: map} = current;
+    map.setView(center, 14);
+    startLatLng = center;
+}
+
 export default class MapComponent extends Component<{}, State> {
     state = {
-        latlng: {
-            lat: 52.5149111,
-            lng: 13.3910441
-        },
+        latlng: startLatLng
     }
-
-    mapRef = createRef<Map>()
 
     handleClick = (e: Object) => {
         this.setState({
             latlng: e.latlng,
         })
+        startLatLng = e.latlng;
         if (this.props.onChange) {
             this.props.onChange(this.state);
         }
@@ -32,16 +41,16 @@ export default class MapComponent extends Component<{}, State> {
 
     render() {
         const marker =
-            <Marker position={this.state.latlng}>
+            <Marker position={startLatLng}>
                 <Popup>Стартовая точка</Popup>
             </Marker>
 
         return (
             <Map
-                center={this.state.latlng}
+                center={startLatLng}
                 length={4}
                 onClick={this.handleClick}
-                ref={this.mapRef}
+                ref={mapRef}
                 zoom={14}>
                 <TileLayer
                     attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
