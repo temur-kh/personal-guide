@@ -16,7 +16,16 @@ from graph_constructor.osm_graph_constructor import OsmGraphConstructor
 osm_data_processor = OSMDataProcessor()
 constructor = OsmGraphConstructor.create(osm_data_processor, "../cache/", cache=False)
 
+
 def print_performance(time_results):
+    """
+    Вывод результатов рабты теста в консоль.
+
+    Params:
+        time_results(dict) - словарь, в котором хранится количество времени для построения маршрута разной длительности.
+
+    """
+
     for time_for_route, ans_for_time in time_results.items():
         print("Statistics for creating {} minutes route:\nmean time {}s\nstd time {}s"
               .format(time_for_route, np.mean(ans_for_time), np.std(ans_for_time))
@@ -24,11 +33,19 @@ def print_performance(time_results):
 
 
 def draw_performance(time_results):
-    data = time_results.values()
+    """
+    Изображение полученных статистик с помощью boxplota.
+
+    Params:
+        time_results(dict) - словарь, в котором хранится количество времени для построения маршрута разной длительности.
+
+    """
+
     plt.title('Performance results')
-    labels = [str(key) for key in time_results.keys()]
     plt.xlabel('Route time, min')
     plt.ylabel('Algorithm time, sec')
+    data = time_results.values()
+    labels = [str(key) for key in time_results.keys()]
     plt.boxplot(data)
     plt.xticks(list(range(1, len(time_results) + 1)), labels)
     plt.show()
@@ -36,17 +53,46 @@ def draw_performance(time_results):
 
 
 def write_performance_to_file(time_results, file_name='performance.json'):
+    """
+    Запись результатов работы тестирования в файл.
+
+    Params:
+        time_results(dict) - словарь, в котором хранится количество времени для построения маршрута разной длительности.
+        file_name(str) - имя файла для записию
+
+    """
+
     with open(file_name, 'w', encoding='utf-8') as f:
         json.dump(time_results, f, ensure_ascii=False, indent=4)
 
 
 def read_performance_from_file(file_name='performance.json'):
+    """
+    Чтение результатов работы алгоритма из файла.
+
+    Params:
+        file_name(str) - имя файла для чтения.
+
+    """
+
     with open(file_name, 'r', encoding='utf-8') as f:
         time_performance = json.load(f)
     return time_performance
 
 
 def get_parser():
+    """
+    Извлечение значений переданных в консоль аргументов.
+    Ключи соответствуют следующим функциям:
+        -r: чтение предыдущих результатов работы теста из файла, заново тест не выполняется.
+        -w: запись полученных результатов в файл.
+        -d: построение графика с результатом работы алгоритма и сохранение графика в файл.
+        -p: печать статистки в консоль.
+
+    Returns:
+        dict - словарь, в котором хранятся значения переданных ключей с соответствующими им значениями.
+
+    """
     parser = argparse.ArgumentParser(description='Process arguments.')
     parser.add_argument('-r', help='Read previous performance result from file', action='store_true')
     parser.add_argument('-w', help='Write result to file', action='store_true')
@@ -57,6 +103,16 @@ def get_parser():
 
 
 def performance_test():
+    """
+    Тест на скорость работы алгоритма построения маршрута.
+    Для заданных ограничений по времени и по категории мест для посещений алгоритм запускается несколько раз.
+    Для статистической значимости лучше запускать 30 и более раз.
+
+    Return:
+        time_results(dict) - словарь, в котором хранится количество времени для построения маршрута разной длительности.
+
+    """
+
     time_for_routes = [60, 120, 180]
     n_tries = 30
     time_results = {
@@ -96,7 +152,6 @@ def performance_test():
             end_time = time.time()
             time_delta = end_time - start_time
             time_results[time_for_route].append(time_delta)
-
 
     return time_results
 
