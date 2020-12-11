@@ -159,7 +159,7 @@ class Optimizer:
 
     def solve_worker(self, id, n_processes, data, clusters, time_for_route, need_return):
         if id == 0:
-            if data['nv'] > 100:
+            if data['nv'] > 100 and len(clusters) > 1:
                 return []
             return self.solve(data, time_for_route, need_return)
         else:
