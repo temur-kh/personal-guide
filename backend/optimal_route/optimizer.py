@@ -141,11 +141,11 @@ class Optimizer:
             cluster - список с индексами вершин
         """
         walking_dist = self.estimate_walking_distance_from_time(time_for_route)
-        stop_dists = [self.estimate_walking_distance_from_time(stime) for stime in data['stop_time']]
         starting_point = data['depot']
         cluster_data = dt.extract_data(data, cluster, starting_point)
         if not need_return:
             correct_distance_matrix_no_return(cluster_data)
+        stop_dists = [self.estimate_walking_distance_from_time(stime) for stime in cluster_data['stop_time']]
         route, route_distance = rt.reward_collecting_tsp(cluster_data, walking_dist, stop_dists)
 
         if not need_return and len(route) > 1:

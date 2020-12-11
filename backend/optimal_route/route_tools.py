@@ -374,7 +374,7 @@ def reward_collecting_tsp(data, max_distance, stop_dists=None):
     solver.parameters.linearization_level = 2
 
     # находит первое решение и возвращает его
-    solution_printer = SolutionWithLimit(limit=10, deadline_seconds=5)
+    solution_printer = SolutionWithLimit(limit=10, deadline_seconds=4)
     solverStatus = solver.SolveWithSolutionCallback(model, solution_printer)
     if solverStatus == 3: #INFEASIBLE
         return [], 0

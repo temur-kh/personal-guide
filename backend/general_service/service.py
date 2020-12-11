@@ -41,7 +41,8 @@ class Service():
         start_location = (start_params['start_lat'], start_params['start_lng'])
 
         n_clusters = round(len(point_locations) / 75)
-        radius = 10  # с потолка
+        radius = 20  # с потолка
+        print("Total number of points:", len(point_locations), flush=True)
         print("Number of clusters:", n_clusters, flush=True)
         clustering_model = ClusteringModel(params={'n_clusters': n_clusters})
         labels = clustering_model.fit_predict(point_locations, start_location, radius=radius)

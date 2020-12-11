@@ -49,7 +49,8 @@ def extract_data(data, cluster, starting_point):
 
     # TODO надо как-то разбивку contraints добавить, чтобы индексы не помешались и лишние индексы не включились
     for constraint, idxs in data['constraints'].items():
-        new_idxs = [i for i in idxs if i in sorted_cluster]
+        new_idxs = [i for i, idx in enumerate(sorted_cluster) if idx in idxs]
+        # new_idxs = [i for i in idxs if i in sorted_cluster]
         if len(new_idxs) > 0:
             cluster_data['constraints'].update({constraint: new_idxs})
 
