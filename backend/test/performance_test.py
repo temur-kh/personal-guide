@@ -6,16 +6,18 @@ import argparse
 import random
 import sys
 import os
+from werkzeug.datastructures import ImmutableMultiDict
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from optimal_route.optimizer import Optimizer
+from general_service.service import Service
 from data_processing.osm_data_processor import OSMDataProcessor
 from graph_constructor.osm_graph_constructor import OsmGraphConstructor
 
-osm_data_processor = OSMDataProcessor()
-constructor = OsmGraphConstructor.create(osm_data_processor, "../cache/", cache=False)
 
+osm_data_processor = OSMDataProcessor()
+constructor = OsmGraphConstructor.create(osm_data_processor, "./cache/", cache=False)
+service = Service(constructor)
 
 def print_performance(time_results):
     """
@@ -102,6 +104,35 @@ def get_parser():
     return args
 
 
+def get_request(start_lat, start_lng, duration, trip_type, need_return, tags, constraints):
+    """
+    Создание запроса для тестирования работы алгоритма.
+
+    Params:
+        start_lat(double) - широта стартовой точки.
+        start_lng(double) - долгота стартовой точки.
+        duration(int) - время маршрута.
+        trip_type(str) - тип маршрута.
+        need_return(str) - нужно ли возвращаться в стартовую точку('true' если нужно и 'false' в противном случае)
+        tags(array-like of str) - теги маршрута.
+        constraints(array-like of str) - ограничения.
+
+    Return:
+        ImmutableMultiDict - словарь с запросом.
+
+    """
+
+    return ImmutableMultiDict([
+        ('start_lat', str(start_lat)),
+        ('start_lng', str(start_lng)),
+        ('duration', str(duration)),
+        ('trip_type', trip_type),
+        ('need_return', str(need_return)),
+        ('tags', ','.join(tags)),
+        ('constraints', ','.join(constraints))
+    ])
+
+
 def performance_test():
     """
     Тест на скорость работы алгоритма построения маршрута.
@@ -114,41 +145,48 @@ def performance_test():
     """
 
     time_for_routes = [60, 120, 180]
-    n_tries = 30
+    n_tries = 5
     time_results = {
         time_for_route: []
         for time_for_route in time_for_routes
     }
-    tags = ['religion', 'tourism', 'architecture', 'historic']
-    constraints = []
-    speed = 66  # meters in minute
-    need_return = False
-    # min_lat = 52.50
-    # max_lat = 52.55
-    # min_lng = 13.34
-    # max_lng = 13.44
 
-    min_lat = 52.54
-    max_lat = 52.54
-    min_lng = 13.5
-    max_lng = 13.5
+    min_lat = 52.50
+    max_lat = 52.55
+    min_lng = 13.34
+    max_lng = 13.44
 
-    start_params = {'tags': tags + constraints}
+    # min_lat = 52.54
+    # max_lat = 52.54
+    # min_lng = 13.5
+    # max_lng = 13.5
+
+    trip_type = 'historic'
+    need_return = 'false'
+    tags = ['historic_historic', 'historic_archaeological', 'historic_tomb',
+            'historic_military', 'historic_transport', 'historic_memorial', 'historic_city']
+    constraints = [
+        'food_restaurant', 'pharmacy'
+    ]
+
     for time_for_route in time_for_routes:
 
-        max_points = int(25 * time_for_route / 60)
-        start_params['distance']= time_for_route * speed
-
         for _ in range(n_tries):
-            start_params['start_lat'] = round(random.uniform(min_lat, max_lat), 4)
-            start_params['start_lng'] = round(random.uniform(min_lng, max_lng), 4)
+            start_lat = round(random.uniform(min_lat, max_lat), 4)
+            start_lng = round(random.uniform(min_lng, max_lng), 4)
+
+            request = get_request(
+                start_lat=start_lat,
+                start_lng=start_lng,
+                duration=time_for_route,
+                trip_type=trip_type,
+                need_return=need_return,
+                tags=tags,
+                constraints=constraints,
+            )
+            print(request)
             start_time = time.time()
-
-            opt = Optimizer(speed=speed)
-            graph = constructor.create_graph(start_params, max_points=max_points)
-            route = opt.solve(graph.data, time_for_route, need_return=need_return)
-            ans = graph.get_way(route)
-
+            routes = service.get_optimal_route(request)
             end_time = time.time()
             time_delta = end_time - start_time
             time_results[time_for_route].append(time_delta)

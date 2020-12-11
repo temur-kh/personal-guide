@@ -12,6 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 server_name = 'http://127.0.0.1:9090/api/submit'
 request_data = {
     'duration': None,
+    'speed': 66,
     'tags': 'historic',
     'constraints': '',
     'start_lat': '52.5',
@@ -28,7 +29,9 @@ def request_to_server():
         response - ответ от сервера.
     """
     session = requests.Session()
+    print(request_data)
     response = session.post(server_name, data=request_data)
+    print(response.status_code)
     is_successful_request = (response.status_code == 200)
     successful_requests.append(is_successful_request)
     return response
@@ -61,10 +64,9 @@ def get_parser():
     """
     Извлечение значений переданных в консоль аргументов.
     Ключи соответствуют следующим функциям:
-        -r: чтение предыдущих результатов работы теста из файла, заново тест не выполняется.
-        -w: запись полученных результатов в файл.
-        -d: построение графика с результатом работы алгоритма и сохранение графика в файл.
-        -p: печать статистки в консоль.
+        -async: асинхронное выполнение запросов.
+        -n: количество запросов.
+        -d: время маршрута.
 
     Returns:
         dict - словарь, в котором хранятся значения переданных ключей с соответствующими им значениями.
@@ -74,7 +76,6 @@ def get_parser():
     parser.add_argument('-d', help='Duration')
     parser.add_argument('-n', help='Number of request')
     parser.add_argument('-async', help='Run requests in async way', action='store_true')
-    parser.add_argument('-p', help='Print results in console', action='store_true')
     args = vars(parser.parse_args())
     return args
 
@@ -115,8 +116,9 @@ def test_seq(num_requests):
 def main():
     args = get_parser()
     num_requests = int(args['n'])
-    duration = args['d']
+    duration = int(args['d'])
     request_data['duration'] = duration
+    request_data['distance'] = request_data['duration'] * request_data['speed']
 
     if args['async']:
         time_results = test_async(num_requests)
