@@ -4,15 +4,20 @@ services:
     container_name: nginx
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
       - 80:80
+      - 443:443
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
 
   backend:
+    restart: always
     container_name: backend
     build:
       context: ./backend/
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     expose:
       - 5000
     volumes:
@@ -35,28 +40,8 @@ services:
       - 27017:27017
     command: mongod
 
-#version: "3"
-#services:
-#  frontend:
-#    container_name: frontend
-#    build:
-#      context: ./frontend
-#      dockerfile: Dockerfile
-#    ports:
-#      - 80:80
-#      - 443:443
-#    volumes:
-#      - /home/ubuntu/ssl:/etc/nginx/certs
-#
-#  backend:
-#    restart: always
-#    container_name: backend
-#    build: ./backend
-#    expose:
-#      - 5000
-#    volumes:
-#      - ./backend:/usr/src/app
-#    environment:
-#      - FLASK_ENV=development
-#      - FLASK_APP=app.py
-#      - FLASK_DEBUG=1
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
