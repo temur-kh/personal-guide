@@ -168,7 +168,11 @@ class OsmGraphConstructor(GraphConstructor):
         Returns:
             list - точки интереса с максимальным reward в своем кластере.
         """
-        clustering_model = ClusteringModel(params={'n_clusters': n_clusters})
+        clustering_model = ClusteringModel(params={'n_clusters': n_clusters,
+                                                   'tol': 1e-3,
+                                                   'n_init': 3,
+                                                   'max_iter': 120,
+                                                   'algorithm': 'full'})
         labels = clustering_model.fit_predict([graph.nodes[nd]['location'] for nd in poi])
 
         order = np.lexsort((rewards, labels))

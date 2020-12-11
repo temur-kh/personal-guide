@@ -171,7 +171,7 @@ class Optimizer:
         n_processes = 1  # multi.cpu_count()
         if n_clusters > 1:
             n_processes += n_clusters
-        pool = multi.Pool(n_processes)
+        pool = multi.Pool(8)
         results = [
             pool.apply_async(self.solve_worker, args=(id, n_processes, data, clusters, time_for_route, need_return))
             for id in range(n_processes)]

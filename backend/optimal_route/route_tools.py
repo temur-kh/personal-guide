@@ -304,8 +304,6 @@ def reward_collecting_tsp(data, max_distance, stop_dists=None):
                 rewards(list) - список наград для точек интереса.
                 stop_time(list) - список врмени остановки на poi.
     """
-    print("Total number of points:", len(data['rewards']), flush=True)
-    print("All rewards:", data['rewards'], flush=True)
 
     num_nodes = data['nv']
     visit_rewards = data['rewards']
@@ -368,13 +366,14 @@ def reward_collecting_tsp(data, max_distance, stop_dists=None):
 
     # Solve and print out the solution.
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 120
+    solver.parameters.num_search_workers = 4
+    solver.parameters.max_time_in_seconds = 10
     solver.parameters.log_search_progress = True
     # To benefit from the linearization of the circuit constraint.
     solver.parameters.linearization_level = 2
 
     # находит первое решение и возвращает его
-    solution_printer = SolutionWithLimit(limit=10, deadline_seconds=4)
+    solution_printer = SolutionWithLimit(limit=5, deadline_seconds=5)
     solverStatus = solver.SolveWithSolutionCallback(model, solution_printer)
     if solverStatus == 3: #INFEASIBLE
         return [], 0
