@@ -38,7 +38,7 @@ class ClusteringModel(MLModel):
         """
         raise NotImplementedError("Transform method for ClusteringModel not implemented")
 
-    def fit(self, x_train, start_loc, radius=10):
+    def fit(self, x_train, start_loc=None, radius=10):
         """
         Обучение модели.
 
@@ -57,7 +57,8 @@ class ClusteringModel(MLModel):
             new_y = math.sin(angle) * (distance + radius)
             return [new_x, new_y]
 
-        x_train = [update_location(p) for p in x_train]
+        if start_loc:
+            x_train = [update_location(p) for p in x_train]
         self.x_train = x_train
         self.model.fit(x_train)
 
@@ -71,7 +72,7 @@ class ClusteringModel(MLModel):
 
         return self.model.labels_
 
-    def fit_predict(self, x_train, start_loc, radius=10):
+    def fit_predict(self, x_train, start_loc=None, radius=10):
         """
         Обучение и предсказание модели.
 
