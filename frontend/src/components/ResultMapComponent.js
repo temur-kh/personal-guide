@@ -1,7 +1,7 @@
 // @flow
 
 import React, {Component, createRef} from 'react'
-import {Map, Marker, TileLayer} from 'react-leaflet'
+import {Map, Marker, Popup, TileLayer} from 'react-leaflet'
 import Polyline from 'react-leaflet-arrowheads'
 import {Icon} from 'leaflet'
 import "../css/ResultMapComponent.css"
@@ -61,25 +61,74 @@ function getIcon(iconType) {
 }
 
 export default class ResultMapComponent extends Component<{}> {
-    mapRef = createRef<Map>()
+
 
     render() {
+        const mapRef = createRef<Map>();
+        const route = this.props.route;
+        const popupRef = route !== undefined
+            ? Array.from({length: route.points.length}, a => createRef<Popup>())
+            : undefined;
+        if (route === undefined) {
+            return (
+                <Map center={this.props.start === undefined ? {lat: 52.5120716, lng: 13.3864754} : this.props.start}
+                     ref={mapRef}
+                     zoom={14}
+                     className={'leaflet-container-result'}>
+                    <TileLayer
+                        attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    }))
+                </Map>
+            );
+        }
         const markers = (
-            this.props.pathData.points.map(point => (
+            route.points.map((point, i) => (
                 <Marker
                     position={[point.lat, point.lng]}
                     icon={getIcon(point.category)}
-                />
+                >
+                    <Popup maxHeight={350} keepInView={true} ref={popupRef[i]}>
+                        <div>
+                            <h2 className="popup-title">
+                                {point.attributes.title !== undefined && point.attributes.title !== null
+                                    ? point.attributes.title
+                                    : point.attributes.category_title}
+                            </h2>
+                            {point.attributes.food_rating !== undefined &&
+                            <h3>Рейтинг: {point.attributes.food_rating}</h3>
+                            }
+                            {point.attributes.description !== undefined &&
+                            <p className="popup-text">
+                                {point.attributes.description.replace(/<(?:.|\n)*?>/gm, '')}
+                            </p>
+                            }
+                            {point.attributes.poi_photo !== undefined &&
+                            <img className="popup-photo"
+                                 src={point.attributes.poi_photo}
+                                 alt="POI"
+                                 onLoad={() => popupRef[i].current.leafletElement.update()}
+                            />
+                            }
+                            {point.attributes.food_images !== undefined &&
+                            point.attributes.food_images.medium !== undefined &&
+                            point.attributes.food_images.medium.url !== undefined &&
+                            <img className="popup-photo" src={point.attributes.food_images.medium.url} alt="Food"/>
+                            }
+                        </div>
+                    </Popup>
+                </Marker>
             ))
         );
 
-        const path = this.props.pathData.paths.map(path => {
+        const path = route.paths.map(path => {
             return [path.lat, path.lng];
-        })
+        });
 
         return (
-            <Map center={this.props.pathData.paths[0]}
-                 ref={this.mapRef}
+            <Map center={this.props.start}
+                 ref={mapRef}
                  zoom={14}
                  className={'leaflet-container-result'}>
                 <TileLayer
@@ -87,7 +136,7 @@ export default class ResultMapComponent extends Component<{}> {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 {markers}
-                (pathData.paths.map(path => {
+                (route.paths.map(path => {
                 <Polyline
                     positions={[path]}
                     color={'black'}
@@ -101,6 +150,6 @@ export default class ResultMapComponent extends Component<{}> {
                     }}/>
             }))
             </Map>
-        )
+        );
     }
 }

@@ -1,23 +1,23 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 
 import Alert from "@material-ui/lab/Alert";
-import MapComponent from './MapComponent'
+import MapComponent, {changeView} from './MapComponent'
 import {useHistory} from "react-router-dom";
 import {
+    Box,
     Button,
-    Container,
-    Grid,
-    Typography,
-    MenuItem,
-    Select,
-    OutlinedInput,
-    FormControl,
-    FormGroup,
-    FormControlLabel,
     Checkbox,
-    Box
+    Container,
+    FormControl,
+    FormControlLabel,
+    FormGroup,
+    Grid,
+    MenuItem,
+    OutlinedInput,
+    Select,
+    Typography
 } from "@material-ui/core"
-import {useStyles, durationMarks, CustomSlider, borderProps} from "../constants.js"
+import {borderProps, cityCenters, CustomSlider, durationMarks, useStyles} from "../constants"
 
 import axios from "axios";
 
@@ -29,9 +29,11 @@ export default function BasicForm() {
     const maxDuration = 360
     const durationStep = 30
     const classes = useStyles()
+    const [city, setCity] = useState("berlin")
+    const [firstLoad, setFirstLoad] = useState(true)
     const [startLatLng, setStartLatLng] = useState({
-        lat: 52.5149111,
-        lng: 13.3910441
+        lat: 52.5120716,
+        lng: 13.3864754
     })
     const [duration, setDuration] = useState(120)
     const [tripType, setTripType] = useState("historic")
@@ -63,13 +65,13 @@ export default function BasicForm() {
     });
     const [entertainmentPlaces] = useState({
         entertainment_art: true,
-        entertainment_museum: true,
-        entertainment_theatre: true,
-        entertainment_cinema: true,
-        entertainment_zoo: true,
-        entertainment_park: true,
-        entertainment_planetarium: true,
-        entertainment_aquarium: true,
+        entertainment_museum: false,
+        entertainment_theatre: false,
+        entertainment_cinema: false,
+        entertainment_zoo: false,
+        entertainment_park: false,
+        entertainment_planetarium: false,
+        entertainment_aquarium: false,
     });
     const [additionalPlaces, setAdditionalPlaces] = useState({
         finance_bank: false,
@@ -89,13 +91,43 @@ export default function BasicForm() {
         {...historicPlaces, ...tourismPlaces, ...architecturePlaces, ...religionPlaces, ...entertainmentPlaces}
     );
 
-    function handleInputTripType(e) {
+    useEffect(() => {
+        if (firstLoad) {
+            handleCityChange("berlin");
+            setFirstLoad(false);
+        }
+    });
+
+    function handleSelectCity(e) {
+        handleCityChange(e.target.value);
+    }
+
+    function handleCityChange(city) {
+        setCity(city);
+        let cityCenter;
+        switch (city) {
+            case "kaliningrad":
+                cityCenter = cityCenters.kaliningrad;
+                break;
+            case "saint-petersburg":
+                cityCenter = cityCenters["saint-petersburg"];
+                break;
+            case "berlin":
+            default:
+                cityCenter = cityCenters.berlin;
+                break;
+        }
+        changeView(cityCenter);
+        setStartLatLng(cityCenter);
+    }
+
+    function handleSelectTripType(e) {
         setTripType(e.target.value);
         setDisplayPlaces("block");
         setPlaces({...historicPlaces, ...tourismPlaces, ...architecturePlaces, ...religionPlaces, ...entertainmentPlaces})
     }
 
-    function handleInputNeedReturn(e) {
+    function handleSelectNeedReturn(e) {
         setNeedReturn(Boolean(e.target.value));
     }
 
@@ -156,6 +188,7 @@ export default function BasicForm() {
                 setLoadingStatus("success");
                 history.push({
                     pathname: "/result",
+                    start: startLatLng,
                     response: response.data
                 });
             })
@@ -182,6 +215,18 @@ export default function BasicForm() {
             <Checkbox
                 checked={checked}
                 onChange={handleAdditionalPlacesCheckboxChange}
+                name={name}
+                color="primary"
+            />
+        } label={label}
+        />
+    }
+
+    function getDisabledFormControlLabel(checked, name, label) {
+        return <FormControlLabel disabled control={
+            <Checkbox
+                checked={checked}
+                onChange={handlePlacesCheckboxChange}
                 name={name}
                 color="primary"
             />
@@ -253,25 +298,25 @@ export default function BasicForm() {
                     {getFormControlLabel(
                         places.entertainment_art, "entertainment_art", "Произведения искусства"
                     )}
-                    {getFormControlLabel(
+                    {getDisabledFormControlLabel(
                         places.entertainment_museum, "entertainment_museum", "Музеи/галереи/выставки"
                     )}
-                    {getFormControlLabel(
+                    {getDisabledFormControlLabel(
                         places.entertainment_theatre, "entertainment_theatre", "Театры"
                     )}
-                    {getFormControlLabel(
+                    {getDisabledFormControlLabel(
                         places.entertainment_cinema, "entertainment_cinema", "Кинотеатры"
                     )}
-                    {getFormControlLabel(
+                    {getDisabledFormControlLabel(
                         places.entertainment_zoo, "entertainment_zoo", "Зоопарки"
                     )}
-                    {getFormControlLabel(
+                    {getDisabledFormControlLabel(
                         places.entertainment_park, "entertainment_park", "Парки аттракционов"
                     )}
-                    {getFormControlLabel(
+                    {getDisabledFormControlLabel(
                         places.entertainment_planetarium, "entertainment_planetarium", "Зоопарки"
                     )}
-                    {getFormControlLabel(
+                    {getDisabledFormControlLabel(
                         places.entertainment_aquarium, "entertainment_aquarium", "Океанариумы"
                     )}
                 </FormGroup>
@@ -328,6 +373,23 @@ export default function BasicForm() {
                 <Grid item xs={3} className={classes.submitForm}>
                     <form onSubmit={handleSubmit}>
                         <Grid container>
+                            <Grid item xs={12} sm={12} md={12} lg={12}>
+                                <FormControl variant="outlined" className={classes.formControl}>
+                                    <Typography variant="h6" shrink fullWidth={true} id="city">
+                                        Город:
+                                    </Typography>
+                                    <Select
+                                        required
+                                        labelId="city"
+                                        value={city}
+                                        onChange={handleSelectCity}
+                                    >
+                                        <MenuItem value={"berlin"}>Берлин</MenuItem>
+                                        <MenuItem value={"kaliningrad"}>Калинград</MenuItem>
+                                        <MenuItem value={"saint-petersburg"}>Санкт-Петербург</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
                             <Grid item xs={11} sm={11} md={11} lg={11} className={classes.grid}>
                                 <Typography variant="h6" shrink fullWidth={true} id="duration-label">
                                     Длительность маршрута(в минутах):
@@ -365,7 +427,7 @@ export default function BasicForm() {
                                 />
                             </Grid>
                             <Box {...borderProps} display={displayPlaces}>
-                                <Grid item xs={12} sm={12} md={12} lg={12} className={classes.grid}>
+                                <Grid item xs={12} sm={12} md={12} lg={12}>
                                     <FormControl variant="outlined" className={classes.formControl}>
                                         <Typography variant="h6" shrink fullWidth={true} id="trip_type">
                                             Тип маршрута:
@@ -374,7 +436,7 @@ export default function BasicForm() {
                                             required
                                             labelId="trip_type"
                                             value={tripType}
-                                            onChange={handleInputTripType}
+                                            onChange={handleSelectTripType}
                                         >
                                             <MenuItem value={"historic"}>Исторический</MenuItem>
                                             <MenuItem value={"architecture"}>Архитектурный</MenuItem>
@@ -389,7 +451,7 @@ export default function BasicForm() {
                                 </Grid>
                             </Box>
                             <Box {...borderProps} display={displayPlaces}>
-                                <Grid item xs={12} sm={12} md={12} lg={12} className={classes.grid}>
+                                <Grid item xs={12} sm={12} md={12} lg={12}>
                                     <Typography variant="h6" shrink fullWidth={true} id="additional_places">
                                         Хочу еще посетить:
                                     </Typography>
@@ -405,7 +467,7 @@ export default function BasicForm() {
                                         required
                                         labelId="need-return"
                                         value={needReturn}
-                                        onChange={handleInputNeedReturn}
+                                        onChange={handleSelectNeedReturn}
                                     >
                                         <MenuItem value={true}>Да</MenuItem>
                                         <MenuItem value={false}>Нет</MenuItem>
@@ -417,7 +479,7 @@ export default function BasicForm() {
                                 <Button type="submit" color="primary" variant="contained">
                                     Построить маршрут
                                 </Button>
-                                <div style={{marginTop: 10}}>
+                                <div style={{marginTop: 10, marginBottom: 10}}>
                                     <Alerting/>
                                 </div>
                             </Grid>
