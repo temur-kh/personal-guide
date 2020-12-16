@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "homepage": "https://walkcreator.ru",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.10.0",

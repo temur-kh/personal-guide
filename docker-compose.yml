@@ -1,16 +1,10 @@
 version: "3"
 services:
-  nginx:
-    container_name: nginx
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
+#  frontend:
+#    container_name: frontend
+#    build:
+#      context: ./frontend
+#      dockerfile: Dockerfile
 
   backend:
     restart: always
@@ -39,9 +33,3 @@ services:
     ports:
       - 27017:27017
     command: mongod
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./data/certbot/conf:/etc/letsencrypt
-      - ./data/certbot/www:/var/www/certbot
