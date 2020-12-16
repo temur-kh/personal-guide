@@ -1,4 +1,5 @@
 import time
+from math import ceil, sqrt
 
 from sklearn.cluster._agglomerative import AgglomerativeClustering
 
@@ -40,7 +41,7 @@ class Service():
         point_locations = graph.data['locations']
         start_location = (start_params['start_lat'], start_params['start_lng'])
 
-        n_clusters = round(len(point_locations) / 75)
+        n_clusters = max(1, round(len(point_locations) / 75))
         radius = 20  # с потолка
         print("Total number of points:", len(point_locations), flush=True)
         print("Number of clusters:", n_clusters, flush=True)
